@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import styles from "./chat.module.css";
+import Pricing from "@/components/Pricing";
 
 function Typewriter({
   prefix = "",
@@ -67,6 +68,8 @@ export default function ChatPage() {
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showPricing, setShowPricing] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const clientWebhook = process.env.NEXT_PUBLIC_WEBHOOK_URL;
 
   const isArabic = (s: string) => /[\u0600-\u06FF]/.test(s);
@@ -87,6 +90,14 @@ export default function ChatPage() {
   useEffect(() => {
     (async () => {
       try {
+        // Fetch user info
+        const meRes = await fetch("/api/auth/me");
+        const meData = await meRes.json().catch(() => null);
+        if (meRes.ok && meData?.user) {
+          setUser(meData.user);
+        }
+
+        // Fetch chat history
         const res = await fetch("/api/chat/history", { cache: "no-store" });
         const data = await res.json().catch(() => null);
         if (res.ok && Array.isArray(data?.items)) {
@@ -102,7 +113,6 @@ export default function ChatPage() {
     setCurrentChatId(id);
     setMessages([]);
     setText("");
-    setSidebarOpen(false); // Close sidebar on mobile when starting new chat
     const el = textareaRef.current;
     if (el) el.focus();
     adjustHeight();
@@ -135,12 +145,32 @@ export default function ChatPage() {
       setChats((prev) => [{ id: chatId!, title }, ...prev]);
     }
 
-    // Save user message
-    fetch("/api/chat/session", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chatId, message: userText, role: "user", content: userText }),
-    }).catch((e) => console.error("Failed to save session:", e));
+    // Check message limit before proceeding
+    try {
+      const sessionRes = await fetch("/api/chat/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chatId, message: userText, role: "user", content: userText }),
+      });
+
+      if (sessionRes.status === 403) {
+        const errorData = await sessionRes.json().catch(() => null);
+        if (errorData?.code === "LIMIT_REACHED") {
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "assistant",
+              content: `🚫 You've reached your message limit (${errorData.limit} messages).\n\nUpgrade to Pro for unlimited messages and unlock your full potential! 🚀`
+            }
+          ]);
+          setSending(false);
+          setShowPricing(true);
+          return;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to save session:", e);
+    }
 
     try {
       let output = "";
@@ -235,28 +265,8 @@ export default function ChatPage() {
   return (
     <div className={styles.container}>
       <div className={styles.layout}>
-        {/* Mobile Header */}
-        <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#09090b] border-b border-[#1c1c1e] flex items-center justify-between px-4 z-50">
-          <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-white p-2 -ml-2"
-          >
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <img alt="SEYA" src="/seyaLogo.svg" className="h-6 w-auto" />
-          <div className="w-8"></div> {/* Spacer for centering */}
-        </div>
-
-        {/* Backdrop */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/60 z-[9998] md:hidden animate-fade-in"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-
         {/* gated by middleware */}
-        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}>
+        <aside className={styles.sidebar}>
           <div className={styles.sidebarHeader}>
             <div
               className={styles.logo}
@@ -269,14 +279,6 @@ export default function ChatPage() {
               <h1 className={styles.brandName}>SEYA AI</h1>
               <p className={styles.brandSubtitle}>AI Writer Agent</p>
             </div>
-
-            {/* Close button for mobile */}
-            <button
-              className="md:hidden ml-auto text-white p-2"
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="material-symbols-outlined">close</span>
-            </button>
           </div>
 
           <button onClick={handleNewChat} className={styles.newChatBtn}>
@@ -295,7 +297,6 @@ export default function ChatPage() {
                 onClick={async () => {
                   setLoadingHistory(true);
                   setMessages([]);
-                  setSidebarOpen(false); // Close sidebar on mobile
                   try {
                     const res = await fetch(`/api/chat/history/${encodeURIComponent(c.id)}`, { cache: "no-store" });
                     const data = await res.json().catch(() => null);
@@ -321,7 +322,7 @@ export default function ChatPage() {
           </div>
 
           <div className={styles.bottomNav}>
-            <a className={styles.navItem} href="#">
+            <a className={styles.navItem} href="#" onClick={(e) => { e.preventDefault(); setShowPricing(true); }}>
               <span className="material-symbols-outlined" style={{ fontSize: "1.2rem" }}>settings</span>
               <span>Settings</span>
             </a>
@@ -454,6 +455,15 @@ export default function ChatPage() {
           </div>
         </main>
       </div>
+
+      {/* Pricing Modal */}
+      {showPricing && user && (
+        <Pricing
+          user={user}
+          userId={user.uid || user.id || user._id}
+          onClose={() => setShowPricing(false)}
+        />
+      )}
     </div>
   );
 }

@@ -27,6 +27,31 @@ export async function POST(req: NextRequest) {
         if (!chatId) return NextResponse.json({ error: "Invalid chatId" }, { status: 400 });
 
         const db = await getDb();
+        const usersCollection = db.collection("users");
+        const { ObjectId } = require("mongodb");
+
+        // Check User Subscription & Limits
+        const user = await usersCollection.findOne({ _id: new ObjectId(payload.uid) });
+
+        if (user) {
+            const isPro = user.subscriptionStatus === 'pro';
+            const messageCount = user.messageCount || 0;
+            const maxMessages = user.maxMessages || 50; // Default 50 for free
+
+            if (!isPro && messageCount >= maxMessages) {
+                return NextResponse.json({
+                    error: "Message limit reached",
+                    code: "LIMIT_REACHED",
+                    limit: maxMessages
+                }, { status: 403 });
+            }
+
+            // Increment message count
+            await usersCollection.updateOne(
+                { _id: new ObjectId(payload.uid) },
+                { $inc: { messageCount: 1 } }
+            );
+        }
 
         const updateDoc: any = {
             $set: {

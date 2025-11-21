@@ -1,95 +1,133 @@
-"use client";
+'use client';
 
-import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+import { useState } from 'react';
+import PaymentButton from './PaymentButton';
 
-export function Pricing() {
-  const { ref, isVisible } = useScrollAnimation();
-
-  const plans = [
-    {
-      name: "Free",
-      description: "Perfect for getting started.",
-      price: 0,
-      period: "/month",
-      features: ["5,000 words/month", "1 user seat", "Basic content templates"],
-      buttonText: "Get Started",
-      buttonVariant: "secondary",
-      popular: false,
-    },
-    {
-      name: "Pro",
-      description: "For content creators and freelancers.",
-      price: 29,
-      period: "/month",
-      features: ["50,000 words/month", "1 user seat", "All content templates", "Priority support"],
-      buttonText: "Choose Pro",
-      buttonVariant: "primary",
-      popular: true,
-    },
-    {
-      name: "Business",
-      description: "For teams and agencies.",
-      price: 99,
-      period: "/month",
-      features: ["Unlimited words", "5 user seats", "Team collaboration tools", "Dedicated support"],
-      buttonText: "Contact Sales",
-      buttonVariant: "secondary",
-      popular: false,
-    },
-  ];
-
-  const delayClasses = ["", "animate-delay-100", "animate-delay-200"];
-
-  return (
-    <section id="pricing" className="flex flex-col gap-10 px-4 py-10 relative z-10">
-      <div ref={ref} className="flex flex-col gap-4 text-center">
-        <h2 className={`text-white tracking-light text-3xl font-bold leading-tight md:text-4xl md:font-black md:leading-tight md:tracking-[-0.033em] scroll-animate ${isVisible ? 'visible' : ''}`}>
-          Choose Your Plan
-        </h2>
-        <p className={`text-[#a0a0b0] text-base font-normal leading-relaxed max-w-2xl mx-auto scroll-animate animate-delay-100 ${isVisible ? 'visible' : ''}`}>
-          Start for free, or unlock powerful features with our Pro and Business plans.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {plans.map((plan, index) => (
-          <div
-            key={index}
-            className={`relative flex flex-col rounded-xl border bg-[#1E1E24]/50 backdrop-blur-sm p-6 scroll-animate ${delayClasses[index]} ${isVisible ? 'visible' : ''} ${plan.popular
-                ? "border-2 border-[#007BFF] shadow-2xl shadow-blue-500/20"
-                : "border border-[#2a2a32]"
-              }`}
-          >
-            {plan.popular && (
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#007BFF] text-white text-xs font-bold px-3 py-1 rounded-full">
-                MOST POPULAR
-              </div>
-            )}
-            <h3 className="text-lg font-bold text-white">{plan.name}</h3>
-            <p className="text-[#a0a0b0] mt-2">{plan.description}</p>
-            <p className="text-4xl font-black text-white mt-4">
-              ${plan.price}
-              <span className="text-base font-medium text-[#a0a0b0]">{plan.period}</span>
-            </p>
-            <ul className="space-y-4 mt-6 text-[#a0a0b0] grow">
-              {plan.features.map((feature, idx) => (
-                <li key={idx} className="flex items-center gap-3">
-                  <span className="material-symbols-outlined text-[#007BFF]">check_circle</span>
-                  {feature}
-                </li>
-              ))}
-            </ul>
-            <button
-              className={`w-full mt-8 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 text-white text-base font-bold transition-colors ${plan.popular
-                  ? "bg-[#007BFF] hover:bg-blue-600"
-                  : "bg-[#2a2a32] hover:bg-[#2a2a32]/80"
-                }`}
-            >
-              {plan.buttonText}
-            </button>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
+interface PricingProps {
+  user: {
+    email: string;
+    name: string;
+    phone_number?: string;
+    [key: string]: any;
+  };
+  userId: string;
+  onClose?: () => void;
 }
 
+export default function Pricing({ user, userId, onClose }: PricingProps) {
+  const userName = user?.name || 'User';
+  const nameParts = userName.split(' ');
+
+  const billingData = {
+    first_name: nameParts[0] || 'User',
+    last_name: nameParts.slice(1).join(' ') || 'Name',
+    email: user?.email || 'user@example.com',
+    phone_number: user?.phone_number || '01000000000',
+    apartment: 'NA',
+    floor: 'NA',
+    street: 'NA',
+    building: 'NA',
+    shipping_method: 'PKG',
+    postal_code: 'NA',
+    city: 'NA',
+    country: 'NA',
+    state: 'NA',
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 max-w-4xl w-full overflow-hidden shadow-2xl">
+        <div className="p-6 border-b border-white/10 flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-white">Upgrade Your Plan</h2>
+          {onClose && (
+            <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-0">
+          {/* Free Plan */}
+          <div className="p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col">
+            <div className="mb-4">
+              <h3 className="text-xl font-semibold text-white mb-2">Free Plan</h3>
+              <p className="text-gray-400 text-sm">Perfect for trying out Seya</p>
+            </div>
+            <div className="mb-8">
+              <span className="text-4xl font-bold text-white">0 EGP</span>
+              <span className="text-gray-500 ml-2">/ month</span>
+            </div>
+            <ul className="space-y-4 mb-8 flex-1">
+              <li className="flex items-center text-gray-300">
+                <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                50 AI Messages / Month
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                Basic Support
+              </li>
+            </ul>
+            <button className="w-full py-3 rounded-lg border border-white/20 text-white font-medium cursor-not-allowed opacity-50" disabled>
+              Current Plan
+            </button>
+          </div>
+
+          {/* Pro Plan */}
+          <div className="p-8 bg-gradient-to-b from-indigo-900/20 to-transparent flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+              RECOMMENDED
+            </div>
+            <div className="mb-4">
+              <h3 className="text-xl font-semibold text-white mb-2">Pro Plan</h3>
+              <p className="text-gray-400 text-sm">Unleash your full potential</p>
+            </div>
+            <div className="mb-8">
+              <span className="text-4xl font-bold text-white">500 EGP</span>
+              <span className="text-gray-500 ml-2">/ month</span>
+            </div>
+            <ul className="space-y-4 mb-8 flex-1">
+              <li className="flex items-center text-white">
+                <svg className="w-5 h-5 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                <strong>Unlimited</strong> AI Messages
+              </li>
+              <li className="flex items-center text-white">
+                <svg className="w-5 h-5 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                Priority Support
+              </li>
+              <li className="flex items-center text-white">
+                <svg className="w-5 h-5 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                Access to New Features
+              </li>
+            </ul>
+
+            <div className="space-y-3">
+              <PaymentButton
+                amount={500}
+                currency="EGP"
+                billingData={billingData}
+                paymentMethod="card"
+                userId={userId}
+                className="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-lg shadow-indigo-900/50"
+              >
+                Upgrade with Card
+              </PaymentButton>
+
+              <PaymentButton
+                amount={500}
+                currency="EGP"
+                billingData={billingData}
+                paymentMethod="wallet"
+                userId={userId}
+                className="w-full py-3 rounded-lg bg-[#1a1a1a] border border-white/20 hover:bg-white/5 text-white font-medium transition-all"
+              >
+                Upgrade with Wallet
+              </PaymentButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -20,7 +20,15 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await hashPassword(password);
-    const user = { email, passwordHash, name, createdAt: new Date() };
+    const user = {
+      email,
+      passwordHash,
+      name,
+      subscriptionStatus: 'free',
+      messageCount: 0,
+      maxMessages: 50,
+      createdAt: new Date()
+    };
     const { insertedId } = await users.insertOne(user);
 
     const token = await signToken({ uid: insertedId.toString(), email });
