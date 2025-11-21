@@ -1,7 +1,33 @@
+"use client";
+
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { useEffect, useRef } from "react";
 
 export default function CapabilitiesPage() {
+  const observerRef = useRef<IntersectionObserver | null>(null);
+
+  useEffect(() => {
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("visible");
+          }
+        });
+      },
+      { threshold: 0.1 }
+    );
+
+    const elements = document.querySelectorAll(".scroll-animate");
+    elements.forEach((el) => observerRef.current?.observe(el));
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, []);
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
@@ -15,10 +41,10 @@ export default function CapabilitiesPage() {
             <main>
               <div className="flex flex-wrap justify-between gap-3 p-4 py-16 text-center">
                 <div className="flex w-full flex-col items-center gap-3">
-                  <p className="text-off-white text-4xl md:text-5xl font-black leading-tight tracking-[-0.033em]">
+                  <p className="scroll-animate text-off-white text-4xl md:text-5xl font-black leading-tight tracking-[-0.033em]">
                     From Ideas to Impact, Instantly
                   </p>
-                  <p className="text-text-muted-dark text-base md:text-lg font-normal leading-normal max-w-2xl">
+                  <p className="scroll-animate animate-delay-100 text-text-muted-dark text-base md:text-lg font-normal leading-normal max-w-2xl">
                     Discover the wide range of high-quality content SEYA can generate for you. Explore examples and see the power of AI in action.
                   </p>
                 </div>
@@ -35,7 +61,7 @@ export default function CapabilitiesPage() {
                 ].map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex flex-1 flex-col gap-3 rounded-xl border border-border-dark bg-card-dark p-6 transition-all hover:border-[#007BFF]/50 hover:shadow-lg"
+                    className={`scroll-animate animate-delay-${(idx + 2) * 100} flex flex-1 flex-col gap-3 rounded-xl border border-border-dark bg-card-dark p-6 transition-all hover:border-[#007BFF]/50 hover:shadow-lg`}
                   >
                     <span className="material-symbols-outlined text-[#007BFF]" style={{ fontSize: 32 }}>{item.icon}</span>
                     <div className="flex flex-col gap-1">
@@ -49,12 +75,12 @@ export default function CapabilitiesPage() {
               <div className="pt-16">
                 <div className="flex flex-col justify-end gap-6 px-4 py-10 @[480px]:gap-8 @[480px]:px-10 @[480px]:py-20">
                   <div className="flex flex-col gap-2 text-center">
-                    <h1 className="text-off-white tracking-tight text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px] mx-auto">
+                    <h1 className="scroll-animate text-off-white tracking-tight text-[32px] font-bold leading-tight @[480px]:text-4xl @[480px]:font-black @[480px]:leading-tight @[480px]:tracking-[-0.033em] max-w-[720px] mx-auto">
                       Ready to Automate Your Content?
                     </h1>
                   </div>
                   <div className="flex flex-1 justify-center">
-                    <div className="flex justify-center">
+                    <div className="scroll-animate animate-delay-100 flex justify-center">
                       <button className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 @[480px]:h-12 @[480px]:px-5 bg-[#007BFF] text-white text-sm font-bold leading-normal tracking-[0.015em] @[480px]:text-base grow hover:bg-blue-600 transition-opacity">
                         <span className="truncate">Choose Your Plan</span>
                       </button>

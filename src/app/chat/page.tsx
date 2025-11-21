@@ -66,6 +66,7 @@ export default function ChatPage() {
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const clientWebhook = process.env.NEXT_PUBLIC_WEBHOOK_URL;
 
   const isArabic = (s: string) => /[\u0600-\u06FF]/.test(s);
@@ -101,6 +102,7 @@ export default function ChatPage() {
     setCurrentChatId(id);
     setMessages([]);
     setText("");
+    setSidebarOpen(false); // Close sidebar on mobile when starting new chat
     const el = textareaRef.current;
     if (el) el.focus();
     adjustHeight();
@@ -233,8 +235,28 @@ export default function ChatPage() {
   return (
     <div className={styles.container}>
       <div className={styles.layout}>
+        {/* Mobile Header */}
+        <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-[#09090b] border-b border-[#1c1c1e] flex items-center justify-between px-4 z-50">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-white p-2 -ml-2"
+          >
+            <span className="material-symbols-outlined">menu</span>
+          </button>
+          <img alt="SEYA" src="/seyaLogo.svg" className="h-6 w-auto" />
+          <div className="w-8"></div> {/* Spacer for centering */}
+        </div>
+
+        {/* Backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-[9998] md:hidden animate-fade-in"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
         {/* gated by middleware */}
-        <aside className={styles.sidebar}>
+        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}>
           <div className={styles.sidebarHeader}>
             <div
               className={styles.logo}
@@ -247,6 +269,14 @@ export default function ChatPage() {
               <h1 className={styles.brandName}>SEYA AI</h1>
               <p className={styles.brandSubtitle}>AI Writer Agent</p>
             </div>
+
+            {/* Close button for mobile */}
+            <button
+              className="md:hidden ml-auto text-white p-2"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
           </div>
 
           <button onClick={handleNewChat} className={styles.newChatBtn}>
@@ -265,6 +295,7 @@ export default function ChatPage() {
                 onClick={async () => {
                   setLoadingHistory(true);
                   setMessages([]);
+                  setSidebarOpen(false); // Close sidebar on mobile
                   try {
                     const res = await fetch(`/api/chat/history/${encodeURIComponent(c.id)}`, { cache: "no-store" });
                     const data = await res.json().catch(() => null);

@@ -1,4 +1,10 @@
+"use client";
+
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+
 export function Pricing() {
+  const { ref, isVisible } = useScrollAnimation();
+
   const plans = [
     {
       name: "Free",
@@ -32,13 +38,15 @@ export function Pricing() {
     },
   ];
 
+  const delayClasses = ["", "animate-delay-100", "animate-delay-200"];
+
   return (
     <section id="pricing" className="flex flex-col gap-10 px-4 py-10 relative z-10">
-      <div className="flex flex-col gap-4 text-center">
-        <h2 className="text-white tracking-light text-3xl font-bold leading-tight md:text-4xl md:font-black md:leading-tight md:tracking-[-0.033em]">
+      <div ref={ref} className="flex flex-col gap-4 text-center">
+        <h2 className={`text-white tracking-light text-3xl font-bold leading-tight md:text-4xl md:font-black md:leading-tight md:tracking-[-0.033em] scroll-animate ${isVisible ? 'visible' : ''}`}>
           Choose Your Plan
         </h2>
-        <p className="text-[#a0a0b0] text-base font-normal leading-relaxed max-w-2xl mx-auto">
+        <p className={`text-[#a0a0b0] text-base font-normal leading-relaxed max-w-2xl mx-auto scroll-animate animate-delay-100 ${isVisible ? 'visible' : ''}`}>
           Start for free, or unlock powerful features with our Pro and Business plans.
         </p>
       </div>
@@ -46,11 +54,10 @@ export function Pricing() {
         {plans.map((plan, index) => (
           <div
             key={index}
-            className={`relative flex flex-col rounded-xl border bg-[#1E1E24]/50 backdrop-blur-sm p-6 ${
-              plan.popular
+            className={`relative flex flex-col rounded-xl border bg-[#1E1E24]/50 backdrop-blur-sm p-6 scroll-animate ${delayClasses[index]} ${isVisible ? 'visible' : ''} ${plan.popular
                 ? "border-2 border-[#007BFF] shadow-2xl shadow-blue-500/20"
                 : "border border-[#2a2a32]"
-            }`}
+              }`}
           >
             {plan.popular && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#007BFF] text-white text-xs font-bold px-3 py-1 rounded-full">
@@ -72,11 +79,10 @@ export function Pricing() {
               ))}
             </ul>
             <button
-              className={`w-full mt-8 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 text-white text-base font-bold transition-colors ${
-                plan.popular
+              className={`w-full mt-8 flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-12 px-5 text-white text-base font-bold transition-colors ${plan.popular
                   ? "bg-[#007BFF] hover:bg-blue-600"
                   : "bg-[#2a2a32] hover:bg-[#2a2a32]/80"
-              }`}
+                }`}
             >
               {plan.buttonText}
             </button>
@@ -86,3 +92,4 @@ export function Pricing() {
     </section>
   );
 }
+

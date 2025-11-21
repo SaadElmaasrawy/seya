@@ -1,4 +1,10 @@
+"use client";
+
+import { useScrollAnimation } from "@/hooks/useScrollAnimation";
+
 export function Testimonials() {
+  const { ref, isVisible } = useScrollAnimation();
+
   const testimonials = [
     {
       quote: '"SEYA cut my content creation time in half! The article writer is a game-changer for my blog."',
@@ -20,16 +26,18 @@ export function Testimonials() {
     },
   ];
 
+  const delayClasses = ["", "animate-delay-100", "animate-delay-200"];
+
   return (
     <section className="flex flex-col gap-10 px-4 py-10 relative z-10">
-      <div className="flex flex-col gap-4 text-center">
-        <h2 className="text-white tracking-light text-3xl font-bold leading-tight md:text-4xl md:font-black md:leading-tight md:tracking-[-0.033em]">
+      <div ref={ref} className="flex flex-col gap-4 text-center">
+        <h2 className={`text-white tracking-light text-3xl font-bold leading-tight md:text-4xl md:font-black md:leading-tight md:tracking-[-0.033em] scroll-animate ${isVisible ? 'visible' : ''}`}>
           What Our Users Say
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {testimonials.map((testimonial, index) => (
-          <div key={index} className="flex flex-col gap-4 rounded-xl border border-[#2a2a32] bg-[#1E1E24]/50 backdrop-blur-sm p-6">
+          <div key={index} className={`flex flex-col gap-4 rounded-xl border border-[#2a2a32] bg-[#1E1E24]/50 backdrop-blur-sm p-6 scroll-animate ${delayClasses[index]} ${isVisible ? 'visible' : ''}`}>
             <p className="text-[#a0a0b0] italic">{testimonial.quote}</p>
             <div className="flex items-center gap-4 mt-2">
               <img
@@ -48,3 +56,4 @@ export function Testimonials() {
     </section>
   );
 }
+
