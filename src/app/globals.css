@@ -1,0 +1,57 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #007BFF;
+  --color-background-light: #f6f7f8;
+  --color-background-dark: #212121;
+  --color-secondary-accent: #00F5D4;
+  --color-off-white: #F5F5F5;
+  --color-graphite-gray: #212121;
+  --color-card-dark: #2a2a2a;
+  --color-border-dark: #3a3a3a;
+  --color-text-muted-dark: #a0a0a0;
+
+  --radius: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-full: 9999px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+}
+
+@keyframes text-slide {
+  0%, 20% { transform: translateY(0%); }
+  25%, 45% { transform: translateY(-25%); }
+  50%, 70% { transform: translateY(-50%); }
+  75%, 95% { transform: translateY(-75%); }
+  100% { transform: translateY(-100%); }
+}
+
+@layer utilities {
+  .animate-text-slide {
+    animation: text-slide 10s cubic-bezier(0.83, 0, 0.17, 1) infinite;
+  }
+}
+
+@layer base {
+  .chat-theme {
+    --color-primary: #3B82F6;
+    --color-primary-hover: #2563EB;
+    --color-secondary: #8B5CF6;
+    --color-background-light: #F3F4F6;
+    --color-background-dark: #09090B;
+    --color-surface: #18181B;
+    --color-surface-hover: #27272A;
+    --color-border: #27272A;
+    --color-text-primary: #FAFAFA;
+    --color-text-secondary: #A1A1AA;
+  }
+}
