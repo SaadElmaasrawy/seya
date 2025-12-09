@@ -1,5 +1,6 @@
 services:
   app:
+    image: seya-app
     container_name: seya-app
     build:
       context: .
@@ -12,25 +13,8 @@ services:
     environment:
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/seya}
       - NODE_ENV=production
-    depends_on:
-      - mongo
     networks:
       - seya-network
-
-  mongo:
-    container_name: seya-mongo
-    image: mongo:latest
-    restart: always
-    ports:
-      - 27017:27017
-    volumes:
-      - mongo-data:/data/db
-    networks:
-      - seya-network
-
-volumes:
-  mongo-data:
-
 
 networks:
   seya-network:
