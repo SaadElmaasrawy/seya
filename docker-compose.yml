@@ -12,6 +12,7 @@ services:
       - .env
     environment:
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/seya}
+      - JWT_SECRET=${JWT_SECRET}
       - NODE_ENV=production
     networks:
       - seya-network
