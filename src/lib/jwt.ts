@@ -15,7 +15,8 @@ export async function signToken(payload: object, expiresIn = "7d") {
         .sign(secret);
 }
 
-export async function verifyToken<T = any>(token: string): Promise<T | null> {
+export async function verifyToken<T = any>(token: string | undefined): Promise<T | null> {
+    if (!token) return null;
     try {
         const { payload } = await jwtVerify(token, secret);
         return payload as T;
