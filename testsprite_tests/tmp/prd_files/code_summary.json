@@ -1,0 +1,86 @@
+{
+    "tech_stack": [
+        "TypeScript",
+        "Next.js",
+        "MongoDB",
+        "Tailwind CSS",
+        "Node.js"
+    ],
+    "features": [
+        {
+            "name": "Authentication System",
+            "description": "User authentication flows including login, registration, password reset, and JWT session management.",
+            "files": [
+                "src/app/api/auth/login/route.ts",
+                "src/app/api/auth/register/route.ts",
+                "src/app/api/auth/forgot-password/route.ts",
+                "src/app/api/auth/reset-password/route.ts",
+                "src/app/api/auth/me/route.ts",
+                "src/app/auth/login/page.tsx",
+                "src/app/auth/register/page.tsx",
+                "src/app/auth/forgot-password/page.tsx",
+                "src/app/auth/reset-password/page.tsx",
+                "src/lib/auth.ts",
+                "src/lib/jwt.ts",
+                "src/components/AuthGate.tsx"
+            ]
+        },
+        {
+            "name": "Chat Interface",
+            "description": "AI Chat interface for users to interact with the AI writer, including chat history management.",
+            "files": [
+                "src/app/chat/page.tsx",
+                "src/app/api/chat/session/route.ts",
+                "src/app/api/chat/history/route.ts",
+                "src/app/api/chat/rename/route.ts",
+                "src/app/api/chat/delete/route.ts"
+            ]
+        },
+        {
+            "name": "Billing & Payments (Paymob)",
+            "description": "Integration with Paymob for subscription payments, including pricing UI and callback handling.",
+            "files": [
+                "src/lib/paymob.ts",
+                "src/app/api/paymob/initiate/route.ts",
+                "src/app/api/paymob/callback/route.ts",
+                "src/app/pricing/page.tsx",
+                "src/app/payment/success/page.tsx",
+                "src/app/payment/error/page.tsx",
+                "src/components/Pricing.tsx",
+                "src/components/PricingSection.tsx",
+                "src/components/PaymentButton.tsx"
+            ]
+        },
+        {
+            "name": "Database Layer",
+            "description": "MongoDB connection and utility functions.",
+            "files": [
+                "src/lib/mongodb.ts",
+                "src/app/api/db/collections/route.ts",
+                "src/app/api/db/check-sessions/route.ts"
+            ]
+        },
+        {
+            "name": "Marketing Website",
+            "description": "Public facing landing pages and components.",
+            "files": [
+                "src/app/page.tsx",
+                "src/app/about/page.tsx",
+                "src/app/contact/page.tsx",
+                "src/app/capabilities/page.tsx",
+                "src/components/Hero.tsx",
+                "src/components/Features.tsx",
+                "src/components/Testimonials.tsx",
+                "src/components/Header.tsx",
+                "src/components/Footer.tsx"
+            ]
+        },
+        {
+            "name": "Integrations",
+            "description": "Webhooks for external integrations (e.g., n8n).",
+            "files": [
+                "src/app/api/webhook/route.ts"
+            ]
+        }
+    ]
+}

@@ -3,6 +3,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { useLanguage } from "@/context/LanguageContext";
 
 function RegisterForm() {
   const router = useRouter();
@@ -14,11 +15,12 @@ function RegisterForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("Passwords do not match"));
       return;
     }
     setLoading(true);
@@ -32,18 +34,18 @@ function RegisterForm() {
       router.push(nextUrl);
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Registration failed");
+      setError(data.error || t("Registration failed"));
     }
     setLoading(false);
   }
 
   return (
     <div className="layout-content-container flex flex-col max-w-[480px] w-full">
-      <h1 className="text-off-white text-2xl font-bold mb-4">Sign Up</h1>
+      <h1 className="text-off-white text-2xl font-bold mb-4">{t("Sign Up")}</h1>
       <form onSubmit={onSubmit} className="flex flex-col gap-4 bg-card-dark border border-border-dark rounded-xl p-6">
         <input
           type="text"
-          placeholder="Name"
+          placeholder={t("Name")}
           value={name}
           onChange={(e) => setName(e.target.value)}
           className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
@@ -51,7 +53,7 @@ function RegisterForm() {
         />
         <input
           type="email"
-          placeholder="Email"
+          placeholder={t("Email")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
@@ -59,7 +61,7 @@ function RegisterForm() {
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder={t("Password")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
@@ -67,7 +69,7 @@ function RegisterForm() {
         />
         <input
           type="password"
-          placeholder="Confirm Password"
+          placeholder={t("Confirm Password")}
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
@@ -75,7 +77,7 @@ function RegisterForm() {
         />
         {error && <div className="text-red-400 text-sm">{error}</div>}
         <button disabled={loading} className="flex w-full items-center justify-center rounded-lg h-11 px-4 bg-[#007BFF] text-white font-bold hover:bg-blue-600 disabled:opacity-60">
-          {loading ? "Creating..." : "Create Account"}
+          {loading ? t("Creating...") : t("Create Account")}
         </button>
       </form>
     </div>

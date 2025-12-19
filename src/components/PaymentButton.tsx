@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useLanguage } from "@/context/LanguageContext";
 
 interface PaymentButtonProps {
     amount: number;
@@ -30,6 +31,7 @@ export default function PaymentButton({
     children,
 }: PaymentButtonProps) {
     const [loading, setLoading] = useState(false);
+    const { t } = useLanguage();
 
     const handlePayment = async () => {
         setLoading(true);
@@ -51,15 +53,28 @@ export default function PaymentButton({
 
             const data = await response.json();
 
-            if (data.iframeUrl) {
+            if (data.client_secret) {
+                // Redirect to Unified Checkout
+                const publicKey = process.env.NEXT_PUBLIC_PAYMOB_PUBLIC_KEY;
+                if (!publicKey) {
+                    console.error('NEXT_PUBLIC_PAYMOB_PUBLIC_KEY is not defined');
+                    alert(t('Payment configuration error. Please contact support.'));
+                    return;
+                }
+                window.location.href = `https://accept.paymob.com/unifiedcheckout/?publicKey=${publicKey}&clientSecret=${data.client_secret}`;
+            } else if (data.iframeUrl) {
+                // Fallback for legacy iframe
                 window.location.href = data.iframeUrl;
+            } else if (data.redirection_url) {
+                // Direct redirection
+                window.location.href = data.redirection_url;
             } else {
-                console.error('Payment initiation failed:', data.error);
-                alert('Payment initiation failed. Please try again.');
+                console.error('Payment initiation failed:', data);
+                alert(t('Payment initiation failed. Please try again.'));
             }
         } catch (error) {
             console.error('Payment error:', error);
-            alert('An error occurred. Please try again.');
+            alert(t('An error occurred. Please try again.'));
         } finally {
             setLoading(false);
         }
@@ -71,7 +86,7 @@ export default function PaymentButton({
             disabled={loading}
             className={`px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 ${className}`}
         >
-            {loading ? 'Processing...' : children || 'Pay Now'}
+            {loading ? t('Processing...') : children || t('Pay Now')}
         </button>
     );
 }

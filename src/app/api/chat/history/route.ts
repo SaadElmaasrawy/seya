@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
     // 3. Map to expected format
     const items = sessionDocs.map((doc) => ({
       id: doc.chatId,
-      title: doc.lastMessage ? doc.lastMessage.slice(0, 40) : "Untitled",
+      title: doc.customTitle || (doc.lastMessage ? doc.lastMessage.slice(0, 40) : "Untitled"),
       createdAt: doc.createdAt || doc.updatedAt || new Date(),
     }));
 

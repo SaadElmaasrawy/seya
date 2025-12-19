@@ -3,6 +3,7 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
+import { useLanguage } from "@/context/LanguageContext";
 
 function LoginForm() {
   const router = useRouter();
@@ -12,6 +13,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { t } = useLanguage();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,18 +28,18 @@ function LoginForm() {
       router.push(nextUrl);
     } else {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Login failed");
+      setError(data.error || t("Login failed"));
     }
     setLoading(false);
   }
 
   return (
     <div className="layout-content-container flex flex-col max-w-[480px] w-full">
-      <h1 className="text-off-white text-2xl font-bold mb-4">Log In</h1>
+      <h1 className="text-off-white text-2xl font-bold mb-4">{t("Log In")}</h1>
       <form onSubmit={onSubmit} className="flex flex-col gap-4 bg-card-dark border border-border-dark rounded-xl p-6">
         <input
           type="email"
-          placeholder="Email"
+          placeholder={t("Email")}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
@@ -45,7 +47,7 @@ function LoginForm() {
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder={t("Password")}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
@@ -53,7 +55,7 @@ function LoginForm() {
         />
         {error && <div className="text-red-400 text-sm">{error}</div>}
         <button disabled={loading} className="flex w-full items-center justify-center rounded-lg h-11 px-4 bg-[#007BFF] text-white font-bold hover:bg-blue-600 disabled:opacity-60">
-          {loading ? "Signing in..." : "Sign In"}
+          {loading ? t("Signing in...") : t("Sign In")}
         </button>
       </form>
     </div>

@@ -1,0 +1,22 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "loginUser": "saad@gmail.com",
+  "loginPassword": "1020304050",
+  "executionArgs": {
+    "projectName": "seya-app",
+    "projectPath": "d:\\seya\\web app\\seya-app",
+    "testIds": [
+      "TC001",
+      "TC003",
+      "TC016"
+    ],
+    "additionalInstruction": "Focus on basic happy paths for now. For registration, use a unique email to avoid conflicts if possible or clean up.",
+    "envs": {
+      "API_KEY": "sk-user-BH27lCISkqHPcr-t6_Om0kFTnMt9MsEHUj0OktItUtsCV-iaU7Z-IHNSUhiSChzaovNVmDsakYY8VD_B-9mZaF1FJZuPd2_oeW0x7DQzRHo5XLJZ9oBaEybeheInhTPA2r8"
+    }
+  },
+  "proxy": "http://ca8f23d9-3b7f-497b-ab8a-789e56dca6df:4gm1K5sZRlwtmGf9z7XXkyDxuuSn7erZ@tun.testsprite.com:8080"
+}

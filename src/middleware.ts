@@ -9,23 +9,19 @@ export async function middleware(req: NextRequest) {
   const token = req.cookies.get("seya_auth")?.value;
 
   let isValidSession = false;
-  console.log(`Middleware: checking path ${pathname}`);
-  
   if (token) {
     try {
-      const payload = await verifyToken(token);
-      isValidSession = !!payload;
-      console.log(`Middleware: Token present. Valid? ${isValidSession}. Payload:`, payload ? "OK" : "NULL");
+      isValidSession = !!(await verifyToken(token));
+      console.log(`Middleware: Token present. Valid? ${isValidSession}`);
     } catch (e) {
       console.error("Middleware: Token verification crashed", e);
     }
   } else {
-    console.log("Middleware: No token found in cookies");
-    console.log("Cookies available:", req.cookies.getAll().map(c => c.name).join(", "));
+    console.log("Middleware: No token found");
   }
 
   if (pathname === "/") {
-    if (isValidSession) return NextResponse.redirect(new URL("/chat", req.url));
+    // Allow access to landing page even if logged in
     return NextResponse.next();
   }
 

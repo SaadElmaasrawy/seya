@@ -1,0 +1,56 @@
+[2025-11-30T01:57:42.386Z] Starting createIntention
+{
+  "amount": 50000,
+  "currency": "EGP",
+  "paymentMethods": [
+    "card",
+    "wallet"
+  ]
+}
+----------------------------------------
+[2025-11-30T01:57:42.387Z] Sending request to Paymob
+{
+  "url": "https://accept.paymob.com/v1/intention/",
+  "payload": {
+    "amount": 50000,
+    "currency": "EGP",
+    "payment_methods": [
+      "card",
+      "wallet"
+    ],
+    "billing_data": {
+      "first_name": "User",
+      "last_name": "Name",
+      "phone_number": "01000000000",
+      "email": "saad02@gmail.com",
+      "apartment": "NA",
+      "floor": "NA",
+      "street": "NA",
+      "building": "NA",
+      "shipping_method": "NA",
+      "postal_code": "NA",
+      "city": "NA",
+      "country": "NA",
+      "state": "NA"
+    },
+    "items": [
+      {
+        "name": "Pro Plan Subscription",
+        "amount_cents": 50000,
+        "description": "Monthly subscription for Pro Plan",
+        "quantity": 1
+      }
+    ]
+  }
+}
+----------------------------------------
+[2025-11-30T01:57:43.082Z] Received response from Paymob
+{
+  "status": 400,
+  "statusText": "Bad Request",
+  "body": "{\"items\":{\"amount\":[\"This field is required.\"]}}"
+}
+----------------------------------------
+[2025-11-30T01:57:43.082Z] Error creating payment intention
+{}
+----------------------------------------

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { verifyToken, authCookie } from "@/lib/auth";
+import { randomUUID } from "crypto";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,12 +20,17 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json().catch(() => null);
-        const chatId = typeof body?.chatId === "string" ? body.chatId : undefined;
+        let chatId = typeof body?.chatId === "string" ? body.chatId : undefined;
         const message = typeof body?.message === "string" ? body.message : undefined;
         const role = typeof body?.role === "string" ? body.role : undefined;
         const content = typeof body?.content === "string" ? body.content : undefined;
+        const webhookUrl = typeof body?.webhookUrl === "string" ? body.webhookUrl : process.env.WEBHOOK_URL;
+        const identity = body?.identity || null;
 
-        if (!chatId) return NextResponse.json({ error: "Invalid chatId" }, { status: 400 });
+        // Generate new ID if missing
+        if (!chatId) {
+            chatId = randomUUID();
+        }
 
         const db = await getDb();
         const usersCollection = db.collection("users");
@@ -72,6 +78,14 @@ export async function POST(req: NextRequest) {
                     timestamp: new Date()
                 }
             };
+        } else if (message) {
+            updateDoc.$push = {
+                messages: {
+                    role: "user",
+                    content: message,
+                    timestamp: new Date()
+                }
+            };
         }
 
         await db.collection("users_session_id").updateOne(
@@ -88,7 +102,57 @@ export async function POST(req: NextRequest) {
             { upsert: true }
         );
 
-        return NextResponse.json({ ok: true });
+        // Forward to Webhook if URL exists
+        let reply = "";
+        if (webhookUrl && message) {
+            try {
+                const webhookPayload: any = {
+                    userId: payload.uid,
+                    message,
+                    chatId,
+                };
+
+                if (identity) {
+                    webhookPayload.identity = identity;
+                }
+
+                const webhookRes = await fetch(webhookUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(webhookPayload)
+                });
+
+                if (webhookRes.ok) {
+                    const contentType = webhookRes.headers.get("content-type") || "";
+                    if (contentType.includes("application/json")) {
+                        const json = await webhookRes.json();
+                        reply = json.output || json.body || "";
+                    } else {
+                        reply = await webhookRes.text();
+                    }
+                }
+            } catch (e) {
+                console.error("Webhook call failed", e);
+            }
+        }
+
+        // Save Assistant Reply if exists
+        if (reply) {
+            await db.collection("users_session_id").updateOne(
+                { chatId },
+                {
+                    $push: {
+                        messages: {
+                            role: "assistant",
+                            content: reply,
+                            timestamp: new Date()
+                        }
+                    } as any
+                }
+            );
+        }
+
+        return NextResponse.json({ ok: true, reply, chatId });
     } catch (e: any) {
         console.error("Failed to save session ID:", e);
         return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });

@@ -1,147 +1,103 @@
 import crypto from 'crypto';
 
-const PAYMOB_API_KEY = process.env.PAYMOB_API_KEY;
-const PAYMOB_INTEGRATION_ID = process.env.PAYMOB_INTEGRATION_ID;
-const PAYMOB_IFRAME_ID = process.env.PAYMOB_IFRAME_ID;
+const PAYMOB_SECRET_KEY = process.env.PAYMOB_SECRET_KEY;
+const PAYMOB_PUBLIC_KEY = process.env.PAYMOB_PUBLIC_KEY;
 const PAYMOB_HMAC_SECRET = process.env.PAYMOB_HMAC_SECRET;
 
 const BASE_URL = 'https://accept.paymob.com/api';
+// Unified Intention API endpoint (inferred, may need adjustment based on specific region/version)
+const INTENTION_ENDPOINT = 'https://accept.paymob.com/api/acceptance/payment_keys'; // Re-using payment_keys for now as it's the closest to "intention" in legacy, but for "Unified" it might be different. 
+// Actually, let's use the standard "intention" endpoint if we can find it, or stick to the "payment_keys" if that's what the user meant by "remake". 
+// The user shared a link to "api-setup-secret-and-public-key". This usually implies the new "Flash" or "Unified" API.
+// Let's try to use the "Flash" API endpoint structure if possible, or fall back to a generic structure.
+// Based on search, it might be `https://flashapi.paymob.com/v1/intention`.
+const FLASH_API_URL = 'https://accept.paymob.com/v1/intention/';
 
-interface PaymobAuthResponse {
-    token: string;
-    profile: any;
+interface PaymobIntentionResponse {
+    client_secret: string;
+    intention_id: string;
+    // Add other fields as needed
 }
 
-interface PaymobOrderResponse {
-    id: number;
-    created_at: string;
-    delivery_needed: boolean;
-    merchant: any;
-    collector: any;
-    amount_cents: number;
-    shipping_data: any;
-    currency: string;
-    is_payment_locked: boolean;
-    is_return: boolean;
-    is_cancel: boolean;
-    is_returned: boolean;
-    is_canceled: boolean;
-    merchant_order_id: string;
-    wallet_notification: any;
-    paid_amount_cents: number;
-    notify_user_with_email: boolean;
-    items: any[];
-    order_url: string;
-    commission_fees: number;
-    delivery_fees_cents: number;
-    delivery_vat_cents: number;
-    payment_method: string;
-    merchant_staff_tag: any;
-    api_source: string;
-    data: any;
-}
+import fs from 'fs';
+import path from 'path';
 
-interface PaymobKeyResponse {
-    token: string;
-}
-
-export async function authenticate(): Promise<string> {
-    if (!PAYMOB_API_KEY) {
-        throw new Error('PAYMOB_API_KEY is not defined');
+function logDebug(message: string, data?: any) {
+    const logPath = path.join(process.cwd(), 'paymob-debug.log');
+    const timestamp = new Date().toISOString();
+    const logEntry = `[${timestamp}] ${message}\n${data ? JSON.stringify(data, null, 2) : ''}\n----------------------------------------\n`;
+    try {
+        fs.appendFileSync(logPath, logEntry);
+    } catch (e) {
+        console.error("Failed to write to log file", e);
     }
-
-    const response = await fetch(`${BASE_URL}/auth/tokens`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            api_key: PAYMOB_API_KEY,
-        }),
-    });
-
-    if (!response.ok) {
-        throw new Error(`Paymob Authentication Failed: ${response.statusText}`);
-    }
-
-    const data: PaymobAuthResponse = await response.json();
-    return data.token;
 }
 
-export async function registerOrder(
-    authToken: string,
-    amountCents: number,
-    currency: string,
-    merchantOrderId?: string,
-    items: any[] = []
-): Promise<number> {
-    const response = await fetch(`${BASE_URL}/ecommerce/orders`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-            auth_token: authToken,
-            delivery_needed: 'false',
-            amount_cents: amountCents.toString(),
-            currency: currency,
-            merchant_order_id: merchantOrderId, // Optional: unique ID from your system
-            items: items,
-        }),
-    });
-
-    if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Paymob Order Registration Failed: ${error}`);
-    }
-
-    const data: PaymobOrderResponse = await response.json();
-    return data.id;
-}
-
-export async function getPaymentKey(
-    authToken: string,
-    orderId: number,
-    amountCents: number,
+export async function createIntention(
+    amount: number,
     currency: string,
     billingData: any,
-    integrationId: string
-): Promise<string> {
-    if (!integrationId) {
-        throw new Error('integrationId is required');
+    items: any[] = [],
+    paymentMethods: string[] = ['card', 'wallet'] // Default methods
+): Promise<any> {
+    logDebug('Starting createIntention', { amount, currency, paymentMethods });
+
+    if (!PAYMOB_SECRET_KEY) {
+        logDebug('Error: PAYMOB_SECRET_KEY is not defined');
+        throw new Error('PAYMOB_SECRET_KEY is not defined');
     }
 
-    const response = await fetch(`${BASE_URL}/acceptance/payment_keys`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
+    // Construct the payload for the Intention API
+    const payload = {
+        amount: amount, // Amount is already in cents
+        currency: currency,
+        payment_methods: paymentMethods,
+        billing_data: {
+            first_name: billingData.first_name || 'NA',
+            last_name: billingData.last_name || 'NA',
+            phone_number: billingData.phone_number || 'NA',
+            email: billingData.email || 'NA',
+            // Add other required fields with defaults
+            apartment: 'NA',
+            floor: 'NA',
+            street: 'NA',
+            building: 'NA',
+            shipping_method: 'NA',
+            postal_code: 'NA',
+            city: 'NA',
+            country: 'NA',
+            state: 'NA',
         },
-        body: JSON.stringify({
-            auth_token: authToken,
-            amount_cents: amountCents.toString(),
-            expiration: 3600, // 1 hour
-            order_id: orderId,
-            billing_data: billingData,
-            currency: currency,
-            integration_id: integrationId,
-            lock_order_when_paid: 'false',
-        }),
-    });
+        items: items,
+        // extras: { ... } // Optional extras
+    };
 
-    if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`Paymob Payment Key Request Failed: ${error}`);
+    logDebug('Sending request to Paymob', { url: FLASH_API_URL, payload });
+
+    try {
+        const response = await fetch(FLASH_API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Token ${PAYMOB_SECRET_KEY}`
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const responseText = await response.text();
+        logDebug('Received response from Paymob', { status: response.status, statusText: response.statusText, body: responseText });
+
+        if (!response.ok) {
+            throw new Error(`Paymob Intention Creation Failed: ${response.status} ${responseText}`);
+        }
+
+        const data = JSON.parse(responseText);
+        return data;
+    } catch (error) {
+        logDebug('Error creating payment intention', error);
+        console.error('Error creating payment intention:', error);
+        throw error;
     }
-
-    const data: PaymobKeyResponse = await response.json();
-    return data.token;
-}
-
-export function getIframeUrl(paymentToken: string): string {
-    if (!PAYMOB_IFRAME_ID) {
-        throw new Error('PAYMOB_IFRAME_ID is not defined');
-    }
-    return `${BASE_URL}/acceptance/iframes/${PAYMOB_IFRAME_ID}?payment_token=${paymentToken}`;
 }
 
 export function verifyHmac(queryParams: any): boolean {
@@ -209,13 +165,6 @@ export function verifyHmac(queryParams: any): boolean {
         .createHmac('sha512', PAYMOB_HMAC_SECRET)
         .update(data)
         .digest('hex');
-
-    console.log('--- HMAC Debug ---');
-    console.log('Data String:', data);
-    console.log('Calculated:', calculatedHmac);
-    console.log('Received:', hmac);
-    console.log('Secret (first 4):', PAYMOB_HMAC_SECRET.substring(0, 4));
-    console.log('------------------');
 
     return calculatedHmac === hmac;
 }

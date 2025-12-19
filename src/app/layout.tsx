@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 const poppins = Poppins({
   variable: "--font-display",
@@ -32,7 +33,9 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${poppins.variable} bg-[#121218] font-display text-white antialiased`}
       >
-        {children}
+        <LanguageProvider>
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );
