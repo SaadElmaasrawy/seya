@@ -118,23 +118,14 @@ export function Pricing() {
                             {t("Access to New Features")}
                         </li>
                     </ul>
-                    {isLoggedIn && user ? (
-                        <a
-                            href="https://wa.me/201023012787?text=Hello%2C%20I%20want%20to%20subscribe%20to%20the%20Pro%20plan"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all shadow-lg shadow-indigo-900/50"
-                        >
-                            {t("Upgrade to Pro")}
-                        </a>
-                    ) : (
-                        <Link
-                            href="/auth/register"
-                            className="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all shadow-lg shadow-indigo-900/50"
-                        >
-                            {t("Upgrade to Pro")}
-                        </Link>
-                    )}
+                    <a
+                        href="https://wa.me/201023012787?text=Hello%2C%20I%20want%20to%20subscribe%20to%20the%20Pro%20plan"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all shadow-lg shadow-indigo-900/50"
+                    >
+                        {t("Upgrade to Pro")}
+                    </a>
                 </div>
             </div>
         </section>
