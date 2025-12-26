@@ -1,19 +1,20 @@
 "use client";
 
-import Link from "next/link";
-import { useLanguage } from "@/context/LanguageContext";
+import { Link } from "@/i18n/routing";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 export function Footer() {
-  const { t } = useLanguage();
+  const t = useTranslations();
 
   return (
     <footer className="mt-12 md:mt-20 border-t border-[#2a2a32] py-6 px-4 relative z-10">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="flex flex-col gap-4 md:col-span-2">
           <div className="flex items-center gap-3">
-            <img alt="SEYA" src="/seyaLogo.svg" className="h-8 md:h-10 w-auto" />
+            <Image alt="SEYA" src="/seyaLogo.svg" width={120} height={40} className="h-8 md:h-10 w-auto" />
           </div>
-          <p className="text-[#a0a0b0] text-sm max-w-sm">{t("The AI-powered content creation platform for modern teams.")}</p>
+          <p className="text-[#a0a0b0] text-sm max-w-sm">{t("platform_tagline")}</p>
         </div>
         <div>
           <h4 className="font-bold text-white mb-4">{t("Product")}</h4>
@@ -67,7 +68,7 @@ export function Footer() {
         </div>
       </div>
       <div className="mt-6 pt-6 border-t border-[#2a2a32] text-center text-sm text-[#a0a0b0]">
-        {t("© 2024 SEYA. All rights reserved.")}
+        {t("footer_copyright")}
       </div>
     </footer>
   );

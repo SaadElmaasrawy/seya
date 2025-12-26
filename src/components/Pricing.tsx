@@ -1,44 +1,23 @@
-'use client';
-
-import { useState } from 'react';
-import PaymentButton from './PaymentButton';
-import { useLanguage } from "@/context/LanguageContext";
+import { useTranslations } from "next-intl";
 
 interface PricingProps {
   user: {
     email: string;
     name: string;
     phone_number?: string;
-    [key: string]: any;
   };
-  userId: string;
   onClose?: () => void;
 }
 
-export default function Pricing({ user, userId, onClose }: PricingProps) {
-  const userName = user?.name || 'User';
-  const nameParts = userName.split(' ');
-  const { t } = useLanguage();
+export default function Pricing({ user, onClose }: PricingProps) {
 
-  const billingData = {
-    first_name: nameParts[0] || 'User',
-    last_name: nameParts.slice(1).join(' ') || 'Name',
-    email: user?.email || 'user@example.com',
-    phone_number: user?.phone_number || '01000000000',
-    apartment: 'NA',
-    floor: 'NA',
-    street: 'NA',
-    building: 'NA',
-    shipping_method: 'PKG',
-    postal_code: 'NA',
-    city: 'NA',
-    country: 'NA',
-    state: 'NA',
-  };
+  const t = useTranslations();
+
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-      <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 max-w-4xl w-full overflow-hidden shadow-2xl">
+      <div className="bg-card-dark rounded-2xl border border-white/10 max-w-4xl w-full overflow-hidden shadow-2xl">
         <div className="p-6 border-b border-white/10 flex justify-between items-center">
           <h2 className="text-2xl font-bold text-white">{t("Upgrade Your Plan")}</h2>
           {onClose && (
@@ -55,7 +34,7 @@ export default function Pricing({ user, userId, onClose }: PricingProps) {
           <div className="p-8 border-b md:border-b-0 md:border-r border-white/10 flex flex-col">
             <div className="mb-4">
               <h3 className="text-xl font-semibold text-white mb-2">{t("Free Plan")}</h3>
-              <p className="text-gray-400 text-sm">{t("Perfect for trying out Seya")}</p>
+              <p className="text-text-muted-dark text-sm">{t("Perfect for trying out Seya")}</p>
             </div>
             <div className="mb-8">
               <span className="text-4xl font-bold text-white">{t("0 EGP")}</span>
@@ -63,11 +42,11 @@ export default function Pricing({ user, userId, onClose }: PricingProps) {
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-center text-gray-300">
-                <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                <svg className="w-5 h-5 text-green-500 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 {t("50 AI Messages / Month")}
               </li>
               <li className="flex items-center text-gray-300">
-                <svg className="w-5 h-5 text-green-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                <svg className="w-5 h-5 text-green-500 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 {t("Basic Support")}
               </li>
             </ul>
@@ -77,13 +56,13 @@ export default function Pricing({ user, userId, onClose }: PricingProps) {
           </div>
 
           {/* Pro Plan */}
-          <div className="p-8 bg-gradient-to-b from-indigo-900/20 to-transparent flex flex-col relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+          <div className="p-8 bg-linear-to-b from-primary/20 to-transparent flex flex-col relative overflow-hidden">
+            <div className="absolute top-0 right-0 bg-primary text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
               {t("RECOMMENDED")}
             </div>
             <div className="mb-4">
               <h3 className="text-xl font-semibold text-white mb-2">{t("Pro Plan")}</h3>
-              <p className="text-gray-400 text-sm">{t("Unleash your full potential")}</p>
+              <p className="text-text-muted-dark text-sm">{t("Unleash your full potential")}</p>
             </div>
             <div className="mb-8">
               <span className="text-4xl font-bold text-white">{t("500 EGP")}</span>
@@ -91,29 +70,27 @@ export default function Pricing({ user, userId, onClose }: PricingProps) {
             </div>
             <ul className="space-y-4 mb-8 flex-1">
               <li className="flex items-center text-white">
-                <svg className="w-5 h-5 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                <svg className="w-5 h-5 text-secondary mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 <strong>{t("Unlimited")}</strong> {t("AI Messages")}
               </li>
               <li className="flex items-center text-white">
-                <svg className="w-5 h-5 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                <svg className="w-5 h-5 text-secondary mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 {t("Priority Support")}
               </li>
               <li className="flex items-center text-white">
-                <svg className="w-5 h-5 text-indigo-400 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                <svg className="w-5 h-5 text-secondary mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                 {t("Access to New Features")}
               </li>
             </ul>
 
-            <PaymentButton
-              amount={500}
-              currency="EGP"
-              billingData={billingData}
-              paymentMethod="card"
-              userId={userId}
-              className="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold transition-all shadow-lg shadow-indigo-900/50"
+            <a
+              href="https://wa.me/201023012787?text=Hello%2C%20I%20want%20to%20subscribe%20to%20the%20Pro%20plan"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full py-3 rounded-lg bg-primary hover:bg-primary/90 text-white font-bold text-center transition-all shadow-lg shadow-primary/20"
             >
               {t("Upgrade to Pro")}
-            </PaymentButton>
+            </a>
           </div>
         </div>
       </div>

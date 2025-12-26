@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useLanguage } from "@/context/LanguageContext";
+import { useTranslations } from "next-intl";
 
 interface PaymentButtonProps {
     amount: number;
@@ -11,9 +11,9 @@ interface PaymentButtonProps {
         last_name: string;
         email: string;
         phone_number: string;
-        [key: string]: any;
+        [key: string]: string | number | boolean | undefined;
     };
-    items?: any[];
+    items?: unknown[];
     paymentMethod?: 'card' | 'wallet';
     userId?: string;
     className?: string;
@@ -31,7 +31,7 @@ export default function PaymentButton({
     children,
 }: PaymentButtonProps) {
     const [loading, setLoading] = useState(false);
-    const { t } = useLanguage();
+    const t = useTranslations();
 
     const handlePayment = async () => {
         setLoading(true);

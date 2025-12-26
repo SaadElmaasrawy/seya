@@ -1,28 +1,25 @@
 import crypto from 'crypto';
 
 const PAYMOB_SECRET_KEY = process.env.PAYMOB_SECRET_KEY;
-const PAYMOB_PUBLIC_KEY = process.env.PAYMOB_PUBLIC_KEY;
+// const PAYMOB_PUBLIC_KEY = process.env.PAYMOB_PUBLIC_KEY;
 const PAYMOB_HMAC_SECRET = process.env.PAYMOB_HMAC_SECRET;
 
-const BASE_URL = 'https://accept.paymob.com/api';
-// Unified Intention API endpoint (inferred, may need adjustment based on specific region/version)
-const INTENTION_ENDPOINT = 'https://accept.paymob.com/api/acceptance/payment_keys'; // Re-using payment_keys for now as it's the closest to "intention" in legacy, but for "Unified" it might be different. 
-// Actually, let's use the standard "intention" endpoint if we can find it, or stick to the "payment_keys" if that's what the user meant by "remake". 
-// The user shared a link to "api-setup-secret-and-public-key". This usually implies the new "Flash" or "Unified" API.
-// Let's try to use the "Flash" API endpoint structure if possible, or fall back to a generic structure.
-// Based on search, it might be `https://flashapi.paymob.com/v1/intention`.
+// const BASE_URL = 'https://accept.paymob.com/api';
 const FLASH_API_URL = 'https://accept.paymob.com/v1/intention/';
 
-interface PaymobIntentionResponse {
-    client_secret: string;
-    intention_id: string;
-    // Add other fields as needed
+interface BillingData {
+    first_name?: string;
+    last_name?: string;
+    phone_number?: string;
+    email?: string;
+    [key: string]: string | undefined;
 }
+
 
 import fs from 'fs';
 import path from 'path';
 
-function logDebug(message: string, data?: any) {
+function logDebug(message: string, data?: unknown) {
     const logPath = path.join(process.cwd(), 'paymob-debug.log');
     const timestamp = new Date().toISOString();
     const logEntry = `[${timestamp}] ${message}\n${data ? JSON.stringify(data, null, 2) : ''}\n----------------------------------------\n`;
@@ -36,10 +33,10 @@ function logDebug(message: string, data?: any) {
 export async function createIntention(
     amount: number,
     currency: string,
-    billingData: any,
-    items: any[] = [],
+    billingData: BillingData,
+    items: unknown[] = [],
     paymentMethods: string[] = ['card', 'wallet'] // Default methods
-): Promise<any> {
+): Promise<unknown> {
     logDebug('Starting createIntention', { amount, currency, paymentMethods });
 
     if (!PAYMOB_SECRET_KEY) {
@@ -100,7 +97,8 @@ export async function createIntention(
     }
 }
 
-export function verifyHmac(queryParams: any): boolean {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function verifyHmac(queryParams: Record<string, any>): boolean {
     if (!PAYMOB_HMAC_SECRET) {
         console.error('PAYMOB_HMAC_SECRET is not defined');
         return false;

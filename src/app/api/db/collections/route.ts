@@ -10,12 +10,13 @@ export async function GET(req: NextRequest) {
     if (!payload?.uid) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const db = await getDb();
-    const cols = await db.listCollections({}, { nameOnly: true }).toArray();
-    const names = cols.map((c: any) => String(c.name)).filter(Boolean);
+    const cols = await db.listCollections().toArray();
+    const names = cols.map((c) => String(c.name)).filter(Boolean);
 
     return NextResponse.json({ ok: true, collections: names });
-  } catch (e: any) {
-    const msg = typeof e?.message === "string" ? e.message : "Server error";
+  } catch (e: unknown) {
+    const error = e as Error;
+    const msg = typeof error?.message === "string" ? error.message : "Server error";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

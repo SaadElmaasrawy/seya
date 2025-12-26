@@ -4,7 +4,7 @@ import { createIntention } from '@/lib/paymob';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { amount, currency, billingData, items, paymentMethod = 'card', userId } = body;
+        const { amount, currency, billingData, items, paymentMethod = 'card' } = body;
 
         if (!amount || !currency || !billingData) {
             return NextResponse.json(
@@ -26,10 +26,11 @@ export async function POST(req: NextRequest) {
         );
 
         return NextResponse.json(intentionData);
-    } catch (error: any) {
-        console.error('Paymob Initiation Error:', error);
+    } catch (error: unknown) {
+        const err = error as Error;
+        console.error('Paymob Initiation Error:', err);
         return NextResponse.json(
-            { error: error.message || 'Failed to initiate payment' },
+            { error: err.message || 'Failed to initiate payment' },
             { status: 500 }
         );
     }

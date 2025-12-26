@@ -72,20 +72,23 @@ export async function POST(req: NextRequest) {
           (resp) => {
             let data = "";
             resp.on("data", (chunk) => (data += chunk));
-            resp.on("end", () => resolve({ status: resp.statusCode || 500, headers: resp.headers as any, body: data }));
+            resp.on("end", () => resolve({ status: resp.statusCode || 500, headers: resp.headers as Record<string, string | string[] | undefined>, body: data }));
           }
         );
         req.on("error", reject);
         req.write(JSON.stringify({ userId: payload.uid, message, chatId }));
         req.end();
-      }).catch((e: any) => ({ status: 502, headers: {} as Record<string, string | string[] | undefined>, body: e?.message || "Webhook request failed" }));
+      }).catch((e: unknown) => {
+        const error = e as Error;
+        return { status: 502, headers: {} as Record<string, string | string[] | undefined>, body: error?.message || "Webhook request failed" };
+      });
 
       const ct = (fallback.headers["content-type"] as string) || "";
       if (fallback.status >= 200 && fallback.status < 300) {
         if (ct.includes("application/json")) {
           try {
-            const json = JSON.parse(fallback.body || "{}");
-            const output = typeof (json as any)?.output === "string" ? (json as any).output : JSON.stringify(json ?? {});
+            const json = JSON.parse(fallback.body || "{}") as Record<string, unknown>;
+            const output = typeof json?.output === "string" ? json.output : JSON.stringify(json ?? {});
             return NextResponse.json({ ok: true, status: fallback.status, body: output });
           } catch {
             return NextResponse.json({ ok: true, status: fallback.status, body: fallback.body });
@@ -95,8 +98,8 @@ export async function POST(req: NextRequest) {
       }
       if (ct.includes("application/json")) {
         try {
-          const errJson = JSON.parse(fallback.body || "{}");
-          const errStr = typeof (errJson as any)?.error === "string" ? (errJson as any).error : JSON.stringify(errJson ?? { error: "Webhook error" });
+          const errJson = JSON.parse(fallback.body || "{}") as Record<string, unknown>;
+          const errStr = typeof errJson?.error === "string" ? errJson.error : JSON.stringify(errJson ?? { error: "Webhook error" });
           return NextResponse.json({ ok: false, status: fallback.status, error: errStr }, { status: 502 });
         } catch {
           return NextResponse.json({ ok: false, status: fallback.status, error: fallback.body || "Webhook error" }, { status: 502 });
@@ -124,8 +127,9 @@ export async function POST(req: NextRequest) {
     }
     const data = await res.text();
     return NextResponse.json({ ok: true, status: res.status, body: data });
-  } catch (e: any) {
-    const msg = typeof e?.message === "string" ? e.message : "Server error";
+  } catch (e: unknown) {
+    const error = e as Error;
+    const msg = typeof error?.message === "string" ? error.message : "Server error";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

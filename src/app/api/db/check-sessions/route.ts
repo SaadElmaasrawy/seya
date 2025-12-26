@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +11,8 @@ export async function GET() {
         const n8nSessions = await db.collection("n8n_chat_histories").find({}).toArray();
         const collections = await db.listCollections().toArray();
         return NextResponse.json({ sessions, userSessions, n8nSessions, collections });
-    } catch (e: any) {
-        return NextResponse.json({ error: e.message }, { status: 500 });
+    } catch (e: unknown) {
+        const error = e as Error;
+        return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }

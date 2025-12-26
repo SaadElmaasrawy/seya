@@ -8,8 +8,8 @@ export async function DELETE(req: NextRequest) {
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const payload = await verifyToken(token);
-        if (!payload || !payload.uid) {
+        const payload = await verifyToken<{ uid: string }>(token);
+        if (!payload?.uid) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -25,7 +25,7 @@ export async function DELETE(req: NextRequest) {
         // 1. Remove from user_sessions_list
         await db.collection("user_sessions_list").updateOne(
             { userId: payload.uid },
-            { $pull: { sessions: chatId } as any }
+            { $pull: { sessions: chatId } as import("mongodb").UpdateFilter<import("mongodb").Document> }
         );
 
         // 2. Delete from users_session_id

@@ -1,33 +1,40 @@
-'use client';
+"use client";
 
-import { useLanguage } from "@/context/LanguageContext";
+import { useTranslations } from "next-intl";
 import { useState, useEffect } from "react";
-import PaymentButton from "./PaymentButton";
+import { Link } from "@/i18n/routing";
+
+
+interface User {
+    id: string;
+    name?: string;
+    email: string;
+}
 
 export function Pricing() {
-    const { t } = useLanguage();
+    const t = useTranslations();
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState<any>(null);
-    const [loading, setLoading] = useState(true);
+    const [user, setUser] = useState<User | null>(null);
 
     useEffect(() => {
-        checkAuth();
-    }, []);
-
-    const checkAuth = async () => {
-        try {
-            const res = await fetch("/api/auth/me");
-            if (res.ok) {
-                const data = await res.json();
-                setIsLoggedIn(true);
-                setUser(data.user);
+        let isMounted = true;
+        const checkAuth = async () => {
+            try {
+                const res = await fetch("/api/auth/me");
+                if (res.ok && isMounted) {
+                    const data = await res.json();
+                    setIsLoggedIn(true);
+                    setUser(data.user);
+                }
+            } catch (error) {
+                console.error("Auth check failed", error);
             }
-        } catch (error) {
-            console.error("Auth check failed", error);
-        } finally {
-            setLoading(false);
-        }
-    };
+        };
+        checkAuth();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     return (
         <section id="pricing" className="flex flex-col gap-8">
@@ -51,13 +58,13 @@ export function Pricing() {
                     </div>
                     <ul className="space-y-4 mb-8 flex-1">
                         <li className="flex items-center text-gray-300">
-                            <svg className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-green-500 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                             {t("50 AI Messages / Month")}
                         </li>
                         <li className="flex items-center text-gray-300">
-                            <svg className="w-5 h-5 text-green-500 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-green-500 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                             {t("Basic Support")}
@@ -71,17 +78,17 @@ export function Pricing() {
                             {t("Current Plan")}
                         </button>
                     ) : (
-                        <a
+                        <Link
                             href="/auth/register"
                             className="w-full py-3 rounded-lg border border-white/20 text-white font-medium text-center hover:bg-white/5 transition-all"
                         >
                             {t("Get Started for Free")}
-                        </a>
+                        </Link>
                     )}
                 </div>
 
                 {/* Pro Plan */}
-                <div className="bg-gradient-to-b from-indigo-900/40 to-indigo-900/10 backdrop-blur-sm border border-indigo-500/30 rounded-2xl p-8 flex flex-col relative overflow-hidden shadow-xl shadow-indigo-900/20">
+                <div className="bg-linear-to-b from-indigo-900/40 to-indigo-900/10 backdrop-blur-sm border border-indigo-500/30 rounded-2xl p-8 flex flex-col relative overflow-hidden shadow-xl shadow-indigo-900/20">
                     <div className="absolute top-0 right-0 bg-indigo-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                         {t("RECOMMENDED")}
                     </div>
@@ -93,52 +100,40 @@ export function Pricing() {
                     </div>
                     <ul className="space-y-4 mb-8 flex-1">
                         <li className="flex items-center text-white">
-                            <svg className="w-5 h-5 text-indigo-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-indigo-400 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                             <strong>{t("Unlimited")}</strong>&nbsp;{t("AI Messages")}
                         </li>
                         <li className="flex items-center text-white">
-                            <svg className="w-5 h-5 text-indigo-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-indigo-400 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                             {t("Priority Support")}
                         </li>
                         <li className="flex items-center text-white">
-                            <svg className="w-5 h-5 text-indigo-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-5 h-5 text-indigo-400 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
                             </svg>
                             {t("Access to New Features")}
                         </li>
                     </ul>
                     {isLoggedIn && user ? (
-                        <PaymentButton
-                            amount={50000} // 500 EGP in cents
-                            currency="EGP"
-                            billingData={{
-                                first_name: user.name?.split(' ')[0] || 'User',
-                                last_name: user.name?.split(' ').slice(1).join(' ') || 'Name',
-                                email: user.email,
-                                phone_number: "01000000000", // Placeholder if not available
-                            }}
-                            items={[{
-                                name: "Pro Plan Subscription",
-                                amount_cents: 50000,
-                                description: "Monthly subscription for Pro Plan",
-                                quantity: 1
-                            }]}
-                            userId={user.id}
-                            className="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all shadow-lg shadow-indigo-900/50"
+                        <a
+                            href="https://wa.me/201023012787?text=Hello%2C%20I%20want%20to%20subscribe%20to%20the%20Pro%20plan"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all shadow-lg shadow-indigo-900/50"
                         >
                             {t("Upgrade to Pro")}
-                        </PaymentButton>
+                        </a>
                     ) : (
-                        <a
+                        <Link
                             href="/auth/register"
                             className="w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-center transition-all shadow-lg shadow-indigo-900/50"
                         >
                             {t("Upgrade to Pro")}
-                        </a>
+                        </Link>
                     )}
                 </div>
             </div>

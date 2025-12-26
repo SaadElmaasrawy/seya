@@ -2,9 +2,24 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { verifyToken, authCookie } from "@/lib/auth";
 import { randomUUID } from "crypto";
+import { ObjectId, UpdateFilter } from "mongodb";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+interface ChatMessage {
+    role: string;
+    content: string;
+    timestamp: Date;
+}
+
+interface ChatSession {
+    userId: string;
+    updatedAt: Date;
+    createdAt?: Date;
+    lastMessage?: string;
+    messages?: ChatMessage[];
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -34,7 +49,6 @@ export async function POST(req: NextRequest) {
 
         const db = await getDb();
         const usersCollection = db.collection("users");
-        const { ObjectId } = require("mongodb");
 
         // Check User Subscription & Limits
         const user = await usersCollection.findOne({ _id: new ObjectId(payload.uid) });
@@ -59,7 +73,7 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const updateDoc: any = {
+        const updateDoc: UpdateFilter<ChatSession> = {
             $set: {
                 userId: payload.uid,
                 updatedAt: new Date(),
@@ -88,7 +102,7 @@ export async function POST(req: NextRequest) {
             };
         }
 
-        await db.collection("users_session_id").updateOne(
+        await db.collection<ChatSession>("users_session_id").updateOne(
             { chatId },
             updateDoc,
             { upsert: true }
@@ -106,7 +120,7 @@ export async function POST(req: NextRequest) {
         let reply = "";
         if (webhookUrl && message) {
             try {
-                const webhookPayload: any = {
+                const webhookPayload: Record<string, unknown> = {
                     userId: payload.uid,
                     message,
                     chatId,
@@ -138,7 +152,7 @@ export async function POST(req: NextRequest) {
 
         // Save Assistant Reply if exists
         if (reply) {
-            await db.collection("users_session_id").updateOne(
+            await db.collection<ChatSession>("users_session_id").updateOne(
                 { chatId },
                 {
                     $push: {
@@ -147,14 +161,15 @@ export async function POST(req: NextRequest) {
                             content: reply,
                             timestamp: new Date()
                         }
-                    } as any
+                    }
                 }
             );
         }
 
         return NextResponse.json({ ok: true, reply, chatId });
-    } catch (e: any) {
-        console.error("Failed to save session ID:", e);
-        return NextResponse.json({ error: e.message || "Server error" }, { status: 500 });
+    } catch (e: unknown) {
+        const error = e as Error;
+        console.error("Failed to save session ID:", error);
+        return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
     }
 }

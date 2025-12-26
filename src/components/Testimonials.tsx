@@ -1,27 +1,28 @@
 "use client";
 
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
-import { useLanguage } from "@/context/LanguageContext";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 export function Testimonials() {
   const { ref, isVisible } = useScrollAnimation();
-  const { t } = useLanguage();
+  const t = useTranslations();
 
   const testimonials = [
     {
-      quote: t('"SEYA cut my content creation time in half! The article writer is a game-changer for my blog."'),
+      quote: t("testimonial_1_text"),
       author: "Sarah J.",
       role: t("Content Marketer"),
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuBfYgEWJ733jh6L7uN_Fuj53HBuHOlwAZpipPzKaaViMqJdOEeVqkzX6sQtVqeY5qXUuWyO2MVjDhSYURqqnNpORz2ukrZurIrX-qmignFH0K7YVzewO9nezhNlPDonX-TgGNtXfcydf9oh3A-cKdFtnun2DhtO3BpH-cV1shB69ob7Tw_rgVSA6mhsdyERvxhbFby6ZWp1XXInJDaSpDuc9r-jb7A79o9GMdUP_5y_TANQ3xYvQXoKZ-NZaivINVVB7GdluSUQW50",
     },
     {
-      quote: t('"As a YouTuber, I struggled with scripts. SEYA\'s Script Pro gives me fantastic ideas and structures to work with."'),
+      quote: t("testimonial_2_text"),
       author: "Mike R.",
       role: t("YouTuber"),
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDmXVDKjW5JMD39ZlsbdeUO3iZflXm5scMnuU9LJrEaC3Qqq_qRseTfYv_81YbAc5OLlKn1A9bExlR3Qt9vndqL3iOWfBw72nY9uIUxsZY5XfKEBm6ZVOnyACx4MxGJVt65AAlcJ_D8D_HkWm6mm6T55-qPZqq-OWYAuPxyokkOGsPova7dykE-FhrGzNtSikhWPBiQDGa3bUk9Sy9F2SMG8O8a7aFSjBRuTBhQPkYVkhfBTxeSIbCCBFhiSswKn5lk39fcYqyeaqg",
     },
     {
-      quote: t('"Managing social media for multiple clients is tough. The Social Media Genius tool is my secret weapon."'),
+      quote: t("testimonial_3_text"),
       author: "Chloe L.",
       role: t("Social Media Manager"),
       image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCFYW1iOaoFibaQsApEddcN_mO5stvWOlfYdCpmF_Uo0YoJB6IA0P6BmBE9FPONF_Ww5JEXb5aW4BdPOe_k1abklddl8FUIamf7ye3NJJ8o__swMVyDjW0evnS04xVgdAgHBYtxRd1WRsSzTLiAFOSSIQtamjex1YGRUfgKEWu66MztcmUx40l8ij8A3S2F3C_zFhbkmkDwH74ZmVyaz9ggXT_R72nXjL3RFQ4Hc0aTu27Y52Ar7nkffJ8fufVDoxbBOhlEO_Z4-ZE",
@@ -42,10 +43,12 @@ export function Testimonials() {
           <div key={index} className={`flex flex-col gap-4 rounded-xl border border-[#2a2a32] bg-[#1E1E24]/50 backdrop-blur-sm p-6 scroll-animate ${delayClasses[index]} ${isVisible ? 'visible' : ''}`}>
             <p className="text-[#a0a0b0] italic">{testimonial.quote}</p>
             <div className="flex items-center gap-4 mt-2">
-              <img
+              <Image
                 alt={`Avatar of ${testimonial.author}`}
                 className="w-12 h-12 rounded-full object-cover"
                 src={testimonial.image}
+                width={48}
+                height={48}
               />
               <div>
                 <p className="font-bold text-white">{testimonial.author}</p>

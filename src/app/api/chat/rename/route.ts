@@ -8,8 +8,8 @@ export async function POST(req: NextRequest) {
         if (!token) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
-        const payload = await verifyToken(token);
-        if (!payload || !payload.uid) {
+        const payload = await verifyToken<{ uid: string }>(token);
+        if (!payload?.uid) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 

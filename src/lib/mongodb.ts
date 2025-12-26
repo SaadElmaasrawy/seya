@@ -7,15 +7,26 @@ if (!uri) {
   throw new Error("Missing MONGODB_URI in environment");
 }
 
-let cached: { client: MongoClient | null } = (global as any)._mongoCached || { client: null };
+interface MongoCached {
+  client: MongoClient | null;
+}
+
+const cached: MongoCached = (global as unknown as { _mongoCached: MongoCached })._mongoCached || { client: null };
 
 export async function getMongoClient() {
   if (cached.client) return cached.client;
-  const client = new MongoClient(uri);
-  await client.connect();
-  cached.client = client;
-  (global as any)._mongoCached = cached;
-  return client;
+  console.log("MongoDB: Connecting to", uri.replace(/:([^:@]{8})[^:@]*@/, ":***@")); // Mask password
+  const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 }); // 5s timeout
+  try {
+    await client.connect();
+    console.log("MongoDB: Connected successfully");
+    cached.client = client;
+    (global as unknown as { _mongoCached: MongoCached })._mongoCached = cached;
+    return client;
+  } catch (error) {
+    console.error("MongoDB: Connection failed", error);
+    throw error;
+  }
 }
 
 export async function getDb() {

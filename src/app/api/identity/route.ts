@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
             .toArray();
 
         return NextResponse.json(identities);
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 }
@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
             description,
             createdAt: new Date()
         });
-    } catch (e) {
+    } catch {
         return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 }

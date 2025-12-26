@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { verifyToken, authCookie } from "@/lib/auth";
-import { ObjectId } from "mongodb";
+
 
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -35,14 +35,14 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     }
 
     // Map messages to standard format
-    const rawMessages = (session.messages || []) as any[];
+    const rawMessages = (session.messages || []) as { role?: string; content?: string; type?: string; data?: { content?: string } }[];
     const messages = rawMessages.map((m) => {
       let role = "user";
       let content = "";
 
       if (m.role) {
         role = m.role;
-        content = m.content;
+        content = m.content || "";
       } else if (m.type) {
         role = m.type === "human" ? "user" : "assistant";
         content = m.data?.content || m.content || "";
@@ -52,8 +52,9 @@ export async function GET(req: NextRequest, props: { params: Promise<{ id: strin
     });
 
     return NextResponse.json({ messages });
-  } catch (e: any) {
-    const msg = typeof e?.message === "string" ? e.message : "Server error";
+  } catch (e: unknown) {
+    const error = e as Error;
+    const msg = typeof error?.message === "string" ? error.message : "Server error";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

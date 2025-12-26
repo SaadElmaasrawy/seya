@@ -4,8 +4,12 @@ import { verifyToken, authCookie } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   const token = req.cookies.get(authCookie.name)?.value;
   if (!token) return NextResponse.json({ authenticated: false }, { status: 200 });
-  const payload = await verifyToken(token);
-  if (!payload) return NextResponse.json({ authenticated: false }, { status: 200 });
+  const payload = await verifyToken<{ uid: string; email: string }>(token);
+  if (!payload) {
+    const response = NextResponse.json({ authenticated: false }, { status: 200 });
+    response.cookies.delete(authCookie.name);
+    return response;
+  }
   return NextResponse.json({ authenticated: true, user: payload });
 }
 

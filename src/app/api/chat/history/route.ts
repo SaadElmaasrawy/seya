@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/mongodb";
 import { verifyToken, authCookie } from "@/lib/auth";
-import { ObjectId } from "mongodb";
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -41,8 +41,9 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json({ ok: true, items });
-  } catch (e: any) {
-    const msg = typeof e?.message === "string" ? e.message : "Server error";
+  } catch (e: unknown) {
+    const error = e as Error;
+    const msg = typeof error?.message === "string" ? error.message : "Server error";
     return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

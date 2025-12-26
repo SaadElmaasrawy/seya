@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyHmac } from '@/lib/paymob';
 import { getDb } from '@/lib/mongodb';
+import { ObjectId } from 'mongodb';
 
 export async function POST(req: NextRequest) {
     try {
@@ -38,8 +39,7 @@ export async function POST(req: NextRequest) {
             amount_cents,
             currency,
             source_data,
-            created_at,
-            data: paymentData
+            created_at
         } = obj;
 
         const db = await getDb();
@@ -78,7 +78,6 @@ export async function POST(req: NextRequest) {
                 const [userId] = order.merchant_order_id.split('_');
 
                 if (userId) {
-                    const { ObjectId } = require('mongodb');
                     const userObjectId = new ObjectId(userId);
 
                     await usersCollection.updateOne(

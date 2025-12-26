@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyToken } from "@/lib/jwt";
+import createIntlMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
 
-console.log("Proxy file loaded/evaluated");
+const intlMiddleware = createIntlMiddleware(routing);
 
-export async function proxy(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
     const token = req.cookies.get("seya_auth")?.value;
 
@@ -12,31 +14,34 @@ export async function proxy(req: NextRequest) {
     if (token) {
         try {
             isValidSession = !!(await verifyToken(token));
-            console.log(`Proxy: Token present. Valid? ${isValidSession}`);
         } catch (e) {
             console.error("Proxy: Token verification crashed", e);
         }
-    } else {
-        console.log("Proxy: No token found");
     }
 
-    if (pathname === "/") {
-        // Allow access to landing page even if logged in
-        return NextResponse.next();
+    // Handle authentication redirects
+    // We check both raw and localized paths
+    const isChatPath = pathname.match(/^\/(?:en|ar)?\/?chat/);
+    const isAuthPath = pathname.match(/^\/(?:en|ar)?\/?auth/);
+
+    if (isChatPath && !isValidSession) {
+        // Redirect to landing page (locale-aware if possible, but "/" works with next-intl)
+        return NextResponse.redirect(new URL("/", req.url));
     }
 
-    if (pathname.startsWith("/chat")) {
-        if (!isValidSession) return NextResponse.redirect(new URL("/", req.url));
-        return NextResponse.next();
+    if (isAuthPath && isValidSession) {
+        return NextResponse.redirect(new URL("/chat", req.url));
     }
 
-    if (pathname.startsWith("/auth")) {
-        if (isValidSession) return NextResponse.redirect(new URL("/chat", req.url));
-    }
-
-    return NextResponse.next();
+    // Run internationalization middleware for all other cases
+    return intlMiddleware(req);
 }
 
 export const config = {
-    matcher: ["/", "/chat", "/auth/:path*"],
+    // Match all pathnames except for
+    // - /api routes
+    // - /_next (Next.js internals)
+    // - /_static (inside /public)
+    // - all root files inside /public (e.g. /favicon.ico)
+    matcher: ['/((?!api|_next|_static|_vercel|[\\w-]+\\.\\w+).*)']
 };
