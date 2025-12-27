@@ -325,10 +325,12 @@ export default function ChatPage() {
     <div className={styles.container}>
       {/* Mobile Header */}
       <div className={styles.mobileHeader}>
-        <button onClick={() => setSidebarOpen(true)} className={styles.menuButton}>
-          <span className="material-symbols-outlined">menu</span>
-        </button>
-        <span className={styles.logo}>SEYA</span>
+        <div className="flex items-center gap-4">
+          <button onClick={() => setSidebarOpen(true)} className={styles.menuButton}>
+            <span className="material-symbols-outlined">menu</span>
+          </button>
+          <span className={styles.logo}>SEYA</span>
+        </div>
         <button onClick={startNewChat} className={styles.newChatButtonMobile}>
           <span className="material-symbols-outlined">add</span>
         </button>
