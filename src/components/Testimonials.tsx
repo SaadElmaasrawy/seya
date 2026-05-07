@@ -38,10 +38,10 @@ export function Testimonials() {
           {t("What Our Users Say")}
         </h2>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {testimonials.map((testimonial, index) => (
-          <div key={index} className={`flex flex-col gap-4 rounded-xl border border-[#2a2a32] bg-[#1E1E24]/50 backdrop-blur-sm p-6 scroll-animate ${delayClasses[index]} ${isVisible ? 'visible' : ''}`}>
-            <p className="text-[#a0a0b0] italic">{testimonial.quote}</p>
+          <div key={index} className={`flex flex-col gap-4 rounded-xl border border-border-subtle bg-surface/50 backdrop-blur-sm p-6 scroll-animate ${delayClasses[index]} ${isVisible ? 'visible' : ''}`}>
+            <p className="text-text-secondary italic">{testimonial.quote}</p>
             <div className="flex items-center gap-4 mt-2">
               <Image
                 alt={`Avatar of ${testimonial.author}`}
@@ -52,7 +52,7 @@ export function Testimonials() {
               />
               <div>
                 <p className="font-bold text-white">{testimonial.author}</p>
-                <p className="text-sm text-[#a0a0b0]">{testimonial.role}</p>
+                <p className="text-sm text-text-secondary">{testimonial.role}</p>
               </div>
             </div>
           </div>

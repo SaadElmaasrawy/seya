@@ -51,10 +51,10 @@ function RegisterForm() {
   return (
     <div className="flex flex-col w-full">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70 mb-2">
+        <h1 className="text-3xl font-bold text-white mb-2">
           {t("Sign Up")}
         </h1>
-        <p className="text-slate-400">
+        <p className="text-text-secondary">
           {t("Create an account to get started")}
         </p>
       </div>
@@ -63,52 +63,55 @@ function RegisterForm() {
         <form onSubmit={onSubmit} className="relative flex flex-col gap-5 bg-card-dark/50 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-2xl">
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">
+              <label htmlFor="register-name" className="text-sm font-medium text-text-secondary ms-1 block">
                 {t("Name")}
               </label>
               <input
+                id="register-name"
                 type="text"
                 placeholder={t("Name")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-medium"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">
+              <label htmlFor="register-email" className="text-sm font-medium text-text-secondary ms-1 block">
                 {t("Email")}
               </label>
               <input
+                id="register-email"
                 type="email"
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-medium"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">
+              <label htmlFor="register-password" className="text-sm font-medium text-text-secondary ms-1 block">
                 {t("Password")}
               </label>
               <input
+                id="register-password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-medium"
                 required
               />
 
               {/* Password Requirements Indicators */}
               {password.length > 0 && (
                 <div className="mt-3 space-y-2 text-sm">
-                  <p className="text-slate-400 font-medium mb-2">{t("Password Requirements")}:</p>
+                  <p className="text-text-secondary font-medium mb-2">{t("Password Requirements")}:</p>
                   <div className="space-y-1.5">
-                    <div className={`flex items-center gap-2 transition-colors ${passwordRequirements.minLength ? 'text-green-400' : 'text-slate-500'}`}>
+                    <div className={`flex items-center gap-2 transition-colors ${passwordRequirements.minLength ? 'text-green-400' : 'text-text-secondary/50'}`}>
                       {passwordRequirements.minLength ? (
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -120,7 +123,7 @@ function RegisterForm() {
                       )}
                       <span>{t("At least 8 characters")}</span>
                     </div>
-                    <div className={`flex items-center gap-2 transition-colors ${passwordRequirements.hasNumberOrSpecial ? 'text-green-400' : 'text-slate-500'}`}>
+                    <div className={`flex items-center gap-2 transition-colors ${passwordRequirements.hasNumberOrSpecial ? 'text-green-400' : 'text-text-secondary/50'}`}>
                       {passwordRequirements.hasNumberOrSpecial ? (
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
@@ -146,15 +149,16 @@ function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">
+              <label htmlFor="register-confirm-password" className="text-sm font-medium text-text-secondary ms-1 block">
                 {t("Confirm Password")}
               </label>
               <input
+                id="register-confirm-password"
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-all font-medium"
                 required
               />
             </div>
@@ -168,7 +172,7 @@ function RegisterForm() {
 
           <button
             disabled={loading}
-            className="group flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-[0_0_20px_-5px_rgba(37,99,235,0.5)] hover:shadow-[0_0_25px_-5px_rgba(37,99,235,0.6)] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+            className="group flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-primary hover:bg-primary/90 text-white font-bold transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-2"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -180,9 +184,9 @@ function RegisterForm() {
             )}
           </button>
 
-          <div className="text-center text-sm text-slate-400 mt-2">
-            Other options?{" "}
-            <Link href="/auth/login" className="text-blue-400 hover:text-blue-300 font-medium hover:underline decoration-blue-400/30 underline-offset-4 transition-all">
+          <div className="text-center text-sm text-text-secondary mt-2">
+            {t("Already have an account?")}{" "}
+            <Link href="/auth/login" className="text-primary hover:text-primary/80 font-medium transition-colors">
               {t("Log In")}
             </Link>
           </div>

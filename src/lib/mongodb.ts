@@ -16,7 +16,7 @@ const cached: MongoCached = (global as unknown as { _mongoCached: MongoCached })
 export async function getMongoClient() {
   if (cached.client) return cached.client;
   console.log("MongoDB: Connecting to", uri.replace(/:([^:@]{8})[^:@]*@/, ":***@")); // Mask password
-  const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 }); // 5s timeout
+  const client = new MongoClient(uri, { serverSelectionTimeoutMS: 30000 }); // 30s timeout
   try {
     await client.connect();
     console.log("MongoDB: Connected successfully");

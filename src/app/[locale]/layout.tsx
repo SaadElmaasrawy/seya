@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "../globals.css";
 import { NextIntlClientProvider } from "next-intl";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
@@ -10,7 +11,8 @@ import Script from "next/script";
 const poppins = Poppins({
   variable: "--font-display",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800", "900"],
+  weight: ["400", "500", "600", "700", "900"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -53,12 +55,17 @@ export default async function RootLayout({
             })(window,document,'script','dataLayer','GTM-P2JTS6FB');
           `}
         </Script>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
       </head>
       <body
         suppressHydrationWarning
-        className={`${poppins.variable} bg-[#121218] font-display text-white antialiased`}
+        className={`${poppins.variable} bg-background-dark font-display text-white antialiased`}
       >
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:z-[9999] focus:top-4 focus:left-4 focus:px-4 focus:py-2 focus:bg-white focus:text-black focus:rounded-md focus:font-medium focus:outline-none"
+        >
+          Skip to content
+        </a>
         <noscript>
           <iframe
             src="https://www.googletagmanager.com/ns.html?id=GTM-P2JTS6FB"
@@ -68,7 +75,9 @@ export default async function RootLayout({
           ></iframe>
         </noscript>
         <NextIntlClientProvider messages={messages}>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

@@ -1,74 +1,29 @@
 "use client";
-// Force rebuild
-import { Link, useRouter } from "@/i18n/routing";
+
+import { useRouter } from "@/i18n/routing";
+import { ChatComposer } from "@/components/chat/ChatComposer";
+import { ChatConversation } from "@/components/chat/ChatConversation";
+import { ChatDialogs } from "@/components/chat/ChatDialogs";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
+import type { Chat, Identity, Message, PromptStarter } from "@/components/chat/types";
 import { useEffect, useRef, useState } from "react";
-import styles from "./chat.module.css";
 import { useTranslations } from "next-intl";
-
-function Typewriter({
-  prefix = "",
-  words = [],
-  typeSpeed = 50,
-  deleteSpeed = 30,
-  delayBeforeDelete = 2000,
-  delayBeforeType = 500
-}: {
-  prefix?: string;
-  words?: string[];
-  typeSpeed?: number;
-  deleteSpeed?: number;
-  delayBeforeDelete?: number;
-  delayBeforeType?: number;
-}) {
-  const [text, setText] = useState("");
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [wordIndex, setWordIndex] = useState(0);
-
-  useEffect(() => {
-    const currentWord = words[wordIndex % words.length] || "";
-    const fullText = prefix + currentWord;
-
-    const handleTyping = () => {
-      if (isDeleting) {
-        setText(prev => prev.slice(0, -1));
-        if (text.length <= prefix.length) {
-          setIsDeleting(false);
-          setWordIndex(prev => prev + 1);
-        }
-      } else {
-        setText(fullText.slice(0, text.length + 1));
-        if (text === fullText) {
-          setTimeout(() => setIsDeleting(true), delayBeforeDelete);
-          return;
-        }
-      }
-    };
-
-    const timer = setTimeout(handleTyping, isDeleting ? deleteSpeed : typeSpeed);
-    return () => clearTimeout(timer);
-  }, [text, isDeleting, wordIndex, words, prefix, typeSpeed, deleteSpeed, delayBeforeDelete]);
-
-  return (
-    <span>
-      {text}
-      <span className={styles.cursor}></span>
-    </span>
-  );
-}
+import styles from "./chat.module.css";
 
 export default function ChatPage() {
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  type Message = { role: "user" | "assistant"; content: string };
-  type Chat = { id: string; title: string };
-  type Identity = { _id: string; title: string; description: string };
+  const settingsModalRef = useRef<HTMLDivElement>(null);
+  const deleteModalRef = useRef<HTMLDivElement>(null);
+  const identityModalRef = useRef<HTMLDivElement>(null);
+  const identityDropdownRef = useRef<HTMLDivElement>(null);
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(false);
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"profile" | "subscription">("profile");
@@ -77,27 +32,35 @@ export default function ChatPage() {
   const [loadingSettings, setLoadingSettings] = useState(false);
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameTitle, setRenameTitle] = useState("");
-
-  // Identity State
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [identities, setIdentities] = useState<Identity[]>([]);
   const [selectedIdentity, setSelectedIdentity] = useState<Identity | null>(null);
   const [showIdentityModal, setShowIdentityModal] = useState(false);
   const [showIdentityDropdown, setShowIdentityDropdown] = useState(false);
   const [identityForm, setIdentityForm] = useState({ title: "", description: "" });
   const [creatingIdentity, setCreatingIdentity] = useState(false);
+  const [identityHintDismissed, setIdentityHintDismissed] = useState(true);
 
   const clientWebhook = process.env.NEXT_PUBLIC_WEBHOOK_URL;
   const t = useTranslations();
 
-  const isArabic = (s: string) => /[\u0600-\u06FF]/.test(s);
+  const promptStarters: PromptStarter[] = [
+    { icon: "article", label: t("prompt_article_label"), hint: t("prompt_article_hint"), prompt: t("prompt_article_text") },
+    { icon: "tag", label: t("prompt_tweet_label"), hint: t("prompt_tweet_hint"), prompt: t("prompt_tweet_text") },
+    { icon: "work", label: t("prompt_linkedin_label"), hint: t("prompt_linkedin_hint"), prompt: t("prompt_linkedin_text") },
+    { icon: "photo_camera", label: t("prompt_instagram_label"), hint: t("prompt_instagram_hint"), prompt: t("prompt_instagram_text") },
+    { icon: "play_circle", label: t("prompt_youtube_label"), hint: t("prompt_youtube_hint"), prompt: t("prompt_youtube_text") },
+    { icon: "shuffle", label: t("prompt_repurpose_label"), hint: t("prompt_repurpose_hint"), prompt: t("prompt_repurpose_text") },
+  ];
+
+  const isArabic = (value: string) => /[\u0600-\u06FF]/.test(value);
 
   function adjustHeight() {
-    const el = textareaRef.current;
-    if (!el) return;
-    el.style.height = "auto";
-    const maxPx = Math.floor(window.innerHeight * 0.2);
-    const next = Math.min(el.scrollHeight, maxPx);
-    el.style.height = `${next}px`;
+    const element = textareaRef.current;
+    if (!element) return;
+    element.style.height = "auto";
+    const nextHeight = Math.min(element.scrollHeight, Math.floor(window.innerHeight * 0.2));
+    element.style.height = `${nextHeight}px`;
   }
 
   useEffect(() => {
@@ -105,53 +68,159 @@ export default function ChatPage() {
   }, [text]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/api/chat/history", { cache: "no-store" });
-        const data = await res.json().catch(() => null);
-        if (res.ok && Array.isArray(data?.items)) {
-          setChats(data.items);
-        }
-      } catch (e) {
-        console.error("Failed to load history", e);
-      }
-    })();
+    if (localStorage.getItem("seya-identity-hint") !== "1") {
+      setIdentityHintDismissed(false);
+    }
+  }, []);
 
-    // Load Identities
-    (async () => {
+  useEffect(() => {
+    void (async () => {
       try {
-        const res = await fetch("/api/identity");
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setIdentities(data);
-          }
+        const [historyRes, identityRes] = await Promise.all([
+          fetch("/api/chat/history", { cache: "no-store" }),
+          fetch("/api/identity"),
+        ]);
+
+        const historyData = await historyRes.json().catch(() => null);
+        if (historyRes.ok && Array.isArray(historyData?.items)) {
+          setChats(historyData.items);
         }
-      } catch (e) {
-        console.error("Failed to load identities", e);
+
+        const identityData = await identityRes.json().catch(() => null);
+        if (identityRes.ok && Array.isArray(identityData)) {
+          setIdentities(identityData);
+        }
+      } catch (error) {
+        console.error("Failed to initialize chat", error);
       }
     })();
   }, []);
 
+  useEffect(() => {
+    if (!settingsOpen) return;
+
+    const modal = settingsModalRef.current;
+    if (!modal) return;
+
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    const trap = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setSettingsOpen(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
+
+    modal.addEventListener("keydown", trap);
+    return () => modal.removeEventListener("keydown", trap);
+  }, [settingsOpen]);
+
+  useEffect(() => {
+    if (!deleteConfirmId) return;
+
+    const modal = deleteModalRef.current;
+    if (!modal) return;
+
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    const trap = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setDeleteConfirmId(null);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
+
+    modal.addEventListener("keydown", trap);
+    return () => modal.removeEventListener("keydown", trap);
+  }, [deleteConfirmId]);
+
+  useEffect(() => {
+    if (!showIdentityModal) return;
+
+    const modal = identityModalRef.current;
+    if (!modal) return;
+
+    const focusable = modal.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    );
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    first?.focus();
+
+    const trap = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setShowIdentityModal(false);
+        return;
+      }
+      if (e.key !== "Tab") return;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last?.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
+
+    modal.addEventListener("keydown", trap);
+    return () => modal.removeEventListener("keydown", trap);
+  }, [showIdentityModal]);
+
+  function dismissIdentityHint() {
+    setIdentityHintDismissed(true);
+    localStorage.setItem("seya-identity-hint", "1");
+  }
+
+  async function refreshChats() {
+    const res = await fetch("/api/chat/history", { cache: "no-store" });
+    const data = await res.json().catch(() => null);
+    if (res.ok && Array.isArray(data?.items)) {
+      setChats(data.items);
+    }
+  }
+
   async function loadChat(id: string) {
     if (id === currentChatId) return;
+
     setLoadingHistory(true);
     setCurrentChatId(id);
-    setSidebarOpen(false); // Close sidebar on mobile when chat selected
+    setSidebarOpen(false);
+
     try {
       const res = await fetch(`/api/chat/history/${id}`, { cache: "no-store" });
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data.messages)) {
-          setMessages(data.messages);
-        } else {
-          setMessages([]);
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load chat", e);
+      const data = await res.json().catch(() => null);
+      setMessages(Array.isArray(data?.messages) ? data.messages : []);
+    } catch (error) {
+      console.error("Failed to load chat", error);
+    } finally {
+      setLoadingHistory(false);
     }
-    setLoadingHistory(false);
   }
 
   function startNewChat() {
@@ -162,22 +231,21 @@ export default function ChatPage() {
 
   async function sendMessage() {
     if (!text.trim() || sending) return;
-    const userMsg = text.trim();
+
+    const userMessage = text.trim();
     setText("");
     setSending(true);
-
-    const newMessages: Message[] = [...messages, { role: "user", content: userMsg }];
-    setMessages(newMessages);
+    setMessages((prev) => [...prev, { role: "user", content: userMessage }]);
 
     try {
       const res = await fetch("/api/chat/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: userMsg,
+          message: userMessage,
           chatId: currentChatId,
           webhookUrl: clientWebhook,
-          identity: selectedIdentity
+          identity: selectedIdentity,
         }),
       });
 
@@ -189,28 +257,27 @@ export default function ChatPage() {
 
       if (data.chatId && data.chatId !== currentChatId) {
         setCurrentChatId(data.chatId);
-        // Refresh chat list
-        const historyRes = await fetch("/api/chat/history", { cache: "no-store" });
-        const historyData = await historyRes.json().catch(() => null);
-        if (historyRes.ok && Array.isArray(historyData?.items)) {
-          setChats(historyData.items);
-        }
+        await refreshChats();
       }
 
       if (data.reply) {
-        setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
+        setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
       }
-    } catch (e) {
-      console.error(e);
-      setMessages(prev => [...prev, { role: "assistant", content: "Error: Could not reach the assistant." }]);
+    } catch (error) {
+      console.error(error);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Error: Could not reach the assistant." },
+      ]);
+    } finally {
+      setSending(false);
     }
-    setSending(false);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent) {
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      void sendMessage();
     }
   }
 
@@ -222,25 +289,25 @@ export default function ChatPage() {
       if (res.ok) {
         const data = await res.json();
         setProfileData({ name: data.user.name || "", email: data.user.email || "", password: "" });
-        // Mock subscription data for now
         setSubscriptionData({ plan: "Free", status: "active" });
       }
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingSettings(false);
     }
-    setLoadingSettings(false);
   }
 
   async function saveProfile() {
     setLoadingSettings(true);
     try {
-      // Implement profile update API call here
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       alert("Profile updated!");
-    } catch (e) {
+    } catch {
       alert("Failed to update profile");
+    } finally {
+      setLoadingSettings(false);
     }
-    setLoadingSettings(false);
   }
 
   async function handleLogout() {
@@ -248,441 +315,212 @@ export default function ChatPage() {
       await fetch("/api/auth/logout", { method: "POST" });
       router.push("/");
       router.refresh();
-    } catch (e) {
-      console.error("Logout failed", e);
+    } catch (error) {
+      console.error("Logout failed", error);
     }
   }
 
-  async function deleteChat(chatId: string, e: React.MouseEvent) {
+  function requestDeleteChat(chatId: string, e: React.MouseEvent<HTMLButtonElement>) {
     e.stopPropagation();
-    if (!confirm(t("Are you sure you want to delete this chat?"))) return;
+    setDeleteConfirmId(chatId);
+  }
+
+  async function confirmDeleteChat() {
+    if (!deleteConfirmId) return;
+
+    const chatId = deleteConfirmId;
+    setDeleteConfirmId(null);
 
     try {
-      const res = await fetch(`/api/chat/history/${chatId}`, {
-        method: 'DELETE',
-      });
-
+      const res = await fetch(`/api/chat/history/${chatId}`, { method: "DELETE" });
       if (res.ok) {
-        setChats(prev => prev.filter(c => c.id !== chatId));
+        setChats((prev) => prev.filter((chat) => chat.id !== chatId));
         if (currentChatId === chatId) {
           startNewChat();
         }
       }
-    } catch (e) {
-      console.error("Failed to delete chat", e);
+    } catch (error) {
+      console.error("Failed to delete chat", error);
     }
   }
 
   async function renameChat(chatId: string, newTitle: string) {
+    const title = newTitle.trim();
+    if (!title) {
+      setRenameId(null);
+      setRenameTitle("");
+      return;
+    }
+
     try {
       const res = await fetch(`/api/chat/history/${chatId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: newTitle })
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
       });
 
       if (res.ok) {
-        setChats(prev => prev.map(c => c.id === chatId ? { ...c, title: newTitle } : c));
-        setRenameId(null);
-        setRenameTitle("");
+        setChats((prev) => prev.map((chat) => (chat.id === chatId ? { ...chat, title } : chat)));
       }
-    } catch (e) {
-      console.error("Failed to rename chat", e);
+    } catch (error) {
+      console.error("Failed to rename chat", error);
+    } finally {
+      setRenameId(null);
+      setRenameTitle("");
     }
   }
 
   async function createIdentity() {
     if (!identityForm.title.trim() || !identityForm.description.trim()) return;
+
     setCreatingIdentity(true);
     try {
       const res = await fetch("/api/identity", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(identityForm)
+        body: JSON.stringify(identityForm),
       });
       if (res.ok) {
-        const newId = await res.json();
-        setIdentities(prev => [newId, ...prev]);
-        setSelectedIdentity(newId);
+        const newIdentity = await res.json();
+        setIdentities((prev) => [newIdentity, ...prev]);
+        setSelectedIdentity(newIdentity);
         setShowIdentityModal(false);
         setIdentityForm({ title: "", description: "" });
       }
-    } catch (e) {
-      console.error("Failed to create identity", e);
+    } catch (error) {
+      console.error("Failed to create identity", error);
+    } finally {
+      setCreatingIdentity(false);
     }
-    setCreatingIdentity(false);
   }
 
-  function handleIdentityClick() {
+  function handleIdentityDropdown() {
     if (identities.length > 0) {
-      setShowIdentityDropdown(!showIdentityDropdown);
+      setShowIdentityDropdown((prev) => !prev);
     } else {
       setShowIdentityModal(true);
     }
   }
 
+  function handleDropdownKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
+    if (e.key === "Escape") {
+      setShowIdentityDropdown(false);
+      return;
+    }
+    if (e.key !== "ArrowDown" && e.key !== "ArrowUp") return;
+
+    e.preventDefault();
+    const container = identityDropdownRef.current;
+    if (!container) return;
+
+    const items = Array.from(container.querySelectorAll<HTMLElement>("button"));
+    const index = items.indexOf(document.activeElement as HTMLElement);
+    const nextIndex =
+      e.key === "ArrowDown"
+        ? Math.min(index + 1, items.length - 1)
+        : Math.max(index - 1, 0);
+
+    items[nextIndex]?.focus();
+  }
+
   return (
     <div className={styles.container}>
-      {/* Mobile Header */}
-      <div className={styles.mobileHeader}>
-        <div className="flex items-center gap-4">
-          <button onClick={() => setSidebarOpen(true)} className={styles.menuButton}>
-            <span className="material-symbols-outlined">menu</span>
-          </button>
-          <span className={styles.logo}>SEYA</span>
-        </div>
-        <button onClick={startNewChat} className={styles.newChatButtonMobile}>
-          <span className="material-symbols-outlined">add</span>
-        </button>
-      </div>
+      <ChatSidebar
+        chats={chats}
+        currentChatId={currentChatId}
+        renameId={renameId}
+        renameTitle={renameTitle}
+        sidebarOpen={sidebarOpen}
+        onOpenSidebar={() => setSidebarOpen(true)}
+        onCloseSidebar={() => setSidebarOpen(false)}
+        onStartNewChat={startNewChat}
+        onLoadChat={(id) => void loadChat(id)}
+        onRenameStart={(chat) => {
+          setRenameId(chat.id);
+          setRenameTitle(chat.title);
+        }}
+        onRenameTitleChange={setRenameTitle}
+        onRenameCommit={(chatId, title) => void renameChat(chatId, title)}
+        onRenameCancel={() => setRenameId(null)}
+        onDeleteRequest={requestDeleteChat}
+        onOpenSettings={() => void openSettings()}
+        styles={styles}
+        t={t}
+      />
 
-      {/* Sidebar Backdrop */}
-      {sidebarOpen && (
-        <div className={styles.backdrop} onClick={() => setSidebarOpen(false)} />
-      )}
+      <main id="main-content" className={styles.main}>
+        <ChatConversation
+          messages={messages}
+          loadingHistory={loadingHistory}
+          sending={sending}
+          promptStarters={promptStarters}
+          onPromptSelect={(prompt) => {
+            setText(prompt);
+            setTimeout(() => textareaRef.current?.focus(), 0);
+          }}
+          isArabic={isArabic}
+          styles={styles}
+          t={t}
+        />
 
-      {/* Sidebar */}
-      <aside className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}>
-        <div className={styles.sidebarHeader}>
-          <Link href="/" className={`${styles.newChatButton} !bg-transparent !border-[#2c2c2e] !border !text-gray-400 hover:!text-white mb-2 no-underline flex items-center justify-center gap-2`}>
-            <span className="material-symbols-outlined">arrow_back</span>
-            {t("Back to Website")}
-          </Link>
-          <button onClick={startNewChat} className={styles.newChatButton}>
-            <span className="material-symbols-outlined">add</span>
-            {t("New Chat")}
-          </button>
-        </div>
-
-        <div className={styles.historyList}>
-          <div className={styles.historyLabel}>{t("History")}</div>
-          {chats.map(chat => (
-            <div
-              key={chat.id}
-              className={`${styles.historyItem} ${chat.id === currentChatId ? styles.active : ''}`}
-              onClick={() => loadChat(chat.id)}
-            >
-              {renameId === chat.id ? (
-                <input
-                  type="text"
-                  value={renameTitle}
-                  onChange={(e) => setRenameTitle(e.target.value)}
-                  onBlur={() => renameChat(chat.id, renameTitle)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') renameChat(chat.id, renameTitle);
-                    if (e.key === 'Escape') setRenameId(null);
-                  }}
-                  autoFocus
-                  onClick={(e) => e.stopPropagation()}
-                  className="bg-transparent border-none text-white w-full outline-none"
-                />
-              ) : (
-                <>
-                  <span className="truncate">{chat.title}</span>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2 bg-[#1c1c1e] shadow-[-10px_0_10px_#1c1c1e]">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setRenameId(chat.id);
-                        setRenameTitle(chat.title);
-                      }}
-                      className="p-1 hover:text-white text-gray-400"
-                      title={t("Rename")}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">edit</span>
-                    </button>
-                    <button
-                      onClick={(e) => deleteChat(chat.id, e)}
-                      className="p-1 hover:text-red-400 text-gray-400"
-                      title={t("Delete")}
-                    >
-                      <span className="material-symbols-outlined text-[16px]">delete</span>
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <div className={styles.userSection}>
-          <button onClick={openSettings} className={styles.settingsButton}>
-            <span className="material-symbols-outlined">settings</span>
-            {t("Settings")}
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Chat Area */}
-      <main className={styles.main}>
-        {messages.length === 0 ? (
-          <div className={styles.welcome}>
-            <h1>{t("Welcome to Seya")}</h1>
-            <div className={styles.typewriter}>
-              <Typewriter
-                words={[
-                  t("Article writing"),
-                  t("Tweet and X Thread writing"),
-                  t("LinkedIn Post writing"),
-                  t("Instagram Caption writing"),
-                  t("Facebook Post writing"),
-                  t("Content Repurposing")
-                ]}
-                typeSpeed={50}
-                deleteSpeed={30}
-                delayBeforeType={1000}
-              />
-            </div>
-          </div>
-        ) : (
-          <div className={styles.messages}>
-            {messages.map((m, i) => (
-              <div key={i} className={`${styles.message} ${m.role === 'user' ? styles.user : styles.assistant}`}>
-                <div className={styles.avatar}>
-                  {m.role === 'user' ? (
-                    <span className="material-symbols-outlined text-[1.2rem]">person</span>
-                  ) : (
-                    <span className="material-symbols-outlined text-[1.2rem]">smart_toy</span>
-                  )}
-                </div>
-                <div className={`${styles.bubble} ${isArabic(m.content) ? styles.rtl : ''}`}>
-                  {m.content}
-                </div>
-              </div>
-            ))}
-            {loadingHistory && <div className="text-center text-gray-500 mt-4">Loading...</div>}
-            {sending && (
-              <div className={`${styles.message} ${styles.assistant}`}>
-                <div className={styles.avatar}>
-                  <span className="material-symbols-outlined text-[1.2rem]">smart_toy</span>
-                </div>
-                <div className={styles.bubble}>
-                  <div className={styles.loadingDots}>
-                    <div className={styles.dot}></div>
-                    <div className={styles.dot}></div>
-                    <div className={styles.dot}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        <div className={styles.inputArea}>
-          {selectedIdentity && (
-            <div className="max-w-[800px] mx-auto mb-2 flex items-center justify-between bg-[#1c1c1e] px-4 py-2 rounded-lg border border-[#2c2c2e]">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[#007BFF]">badge</span>
-                <span className="text-sm font-medium">{selectedIdentity.title}</span>
-              </div>
-              <button
-                onClick={() => setSelectedIdentity(null)}
-                className="text-gray-400 hover:text-white"
-              >
-                <span className="material-symbols-outlined text-[18px]">close</span>
-              </button>
-            </div>
-          )}
-          <div className={styles.inputWrapper}>
-            <div className="relative">
-              <button
-                onClick={handleIdentityClick}
-                className={`${styles.actionButton} ml-2 mt-2 hover:bg-white/10 transition-colors`}
-                title={t("Add Identity")}
-              >
-                <span className="material-symbols-outlined text-gray-400 hover:text-white">add</span>
-              </button>
-
-              {showIdentityDropdown && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowIdentityDropdown(false)} />
-                  <div className="absolute bottom-full left-0 mb-2 w-56 bg-[#1c1c1e] border border-[#2c2c2e] rounded-xl shadow-xl z-20 overflow-hidden">
-                    {identities.map(id => (
-                      <button
-                        key={id._id}
-                        onClick={() => {
-                          setSelectedIdentity(id);
-                          setShowIdentityDropdown(false);
-                        }}
-                        className="w-full text-left px-4 py-3 hover:bg-[#2c2c2e] transition-colors flex items-center gap-2 group"
-                      >
-                        <span className="material-symbols-outlined text-[18px] text-gray-400 group-hover:text-white transition-colors">badge</span>
-                        <span className="truncate text-sm text-gray-300 group-hover:text-white transition-colors">{id.title}</span>
-                      </button>
-                    ))}
-                    <div className="border-t border-[#2c2c2e] p-2 ">
-                      <button
-                        onClick={() => {
-                          setShowIdentityModal(true);
-                          setShowIdentityDropdown(false);
-                        }}
-                        className="w-full text-left px-2 py-2 hover:bg-[#2c2c2e] rounded-lg transition-colors flex items-center gap-2 text-[#007BFF]"
-                      >
-                        <span className="material-symbols-outlined text-[18px]">add</span>
-                        <span className="text-sm font-medium whitespace-nowrap">{t("Create New Identity")}</span>
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <textarea
-              ref={textareaRef}
-              value={text}
-              onChange={e => setText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={t("chat_placeholder")}
-              rows={1}
-              disabled={sending}
-              dir="auto"
-            />
-            <button onClick={sendMessage} disabled={!text.trim() || sending} className={styles.actionButton}>
-              {sending ? (
-                <span className="material-symbols-outlined animate-spin">sync</span>
-              ) : (
-                <span className="material-symbols-outlined">arrow_upward</span>
-              )}
-            </button>
-          </div>
-        </div>
+        <ChatComposer
+          text={text}
+          sending={sending}
+          identities={identities}
+          selectedIdentity={selectedIdentity}
+          showIdentityDropdown={showIdentityDropdown}
+          showIdentityHint={!identityHintDismissed && identities.length === 0 && messages.length === 0}
+          textareaRef={textareaRef}
+          identityDropdownRef={identityDropdownRef}
+          onTextChange={setText}
+          onKeyDown={handleKeyDown}
+          onSendMessage={() => void sendMessage()}
+          onClearIdentity={() => setSelectedIdentity(null)}
+          onDismissIdentityHint={dismissIdentityHint}
+          onOpenIdentityModal={() => {
+            setShowIdentityModal(true);
+            setShowIdentityDropdown(false);
+          }}
+          onToggleIdentityDropdown={handleIdentityDropdown}
+          onSelectIdentity={(identity) => {
+            setSelectedIdentity(identity);
+            setShowIdentityDropdown(false);
+          }}
+          onDropdownKeyDown={handleDropdownKeyDown}
+          styles={styles}
+          t={t}
+        />
       </main>
 
-      {/* Settings Modal */}
-      {settingsOpen && (
-        <div className={styles.modalOverlay} onClick={() => setSettingsOpen(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>{t("Settings")}</h2>
-              <button onClick={() => setSettingsOpen(false)}>
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <div className={styles.modalTabs}>
-              <button
-                className={activeTab === "profile" ? styles.activeTab : ""}
-                onClick={() => setActiveTab("profile")}
-              >
-                {t("Profile")}
-              </button>
-              <button
-                className={activeTab === "subscription" ? styles.activeTab : ""}
-                onClick={() => setActiveTab("subscription")}
-              >
-                {t("Subscription")}
-              </button>
-            </div>
-            <div className={styles.modalContent}>
-              {loadingSettings ? (
-                <div className="p-8 text-center text-gray-400">Loading...</div>
-              ) : activeTab === "profile" ? (
-                <div className={styles.form}>
-                  <div className={styles.formGroup}>
-                    <label>{t("Name")}</label>
-                    <input
-                      value={profileData.name}
-                      onChange={e => setProfileData({ ...profileData, name: e.target.value })}
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>{t("Email")}</label>
-                    <input
-                      value={profileData.email}
-                      disabled
-                      className="opacity-50 cursor-not-allowed"
-                    />
-                  </div>
-                  <div className={styles.formGroup}>
-                    <label>{t("Password")}</label>
-                    <input
-                      type="password"
-                      placeholder="New Password (leave blank to keep)"
-                      value={profileData.password}
-                      onChange={e => setProfileData({ ...profileData, password: e.target.value })}
-                    />
-                  </div>
-                  <button onClick={saveProfile} className={styles.saveButton}>
-                    {t("Save Changes")}
-                  </button>
-                  <div className="mt-8 pt-6 border-t border-[#2c2c2e]">
-                    <button
-                      onClick={handleLogout}
-                      className="w-full flex items-center justify-center gap-2 p-3 rounded-lg text-red-500 hover:bg-red-500/10 transition-colors cursor-pointer"
-                    >
-                      <span className="material-symbols-outlined">logout</span>
-                      {t("Log Out")}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className={styles.subscription}>
-                  <div className="bg-[#1c1c1e] p-4 rounded-xl border border-[#2c2c2e]">
-                    <div className="flex justify-between items-center mb-4">
-                      <div>
-                        <h3 className="text-gray-400 text-sm font-medium">{t("Current Plan")}</h3>
-                        <p className="text-2xl font-bold text-white mt-1">{subscriptionData.plan}</p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-sm ${subscriptionData.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'
-                        }`}>
-                        {subscriptionData.status}
-                      </span>
-                    </div>
-                    {subscriptionData.plan === "Free" && (
-                      <button
-                        onClick={() => router.push('/pricing')}
-                        className="w-full py-2 bg-white text-black font-semibold rounded-lg hover:bg-gray-200 transition-colors"
-                      >
-                        {t("Upgrade to Pro")}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Identity Modal */}
-      {showIdentityModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowIdentityModal(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2>{t("Add Identity")}</h2>
-              <button onClick={() => setShowIdentityModal(false)}>
-                <span className="material-symbols-outlined">close</span>
-              </button>
-            </div>
-            <div className={styles.modalContent}>
-              <div className={styles.form}>
-                <div className={styles.formGroup}>
-                  <label>{t("Title")}</label>
-                  <input
-                    placeholder="e.g. Professional Copywriter"
-                    value={identityForm.title}
-                    onChange={e => setIdentityForm({ ...identityForm, title: e.target.value })}
-                  />
-                </div>
-                <div className={styles.formGroup}>
-                  <label>{t("Description")}</label>
-                  <textarea
-                    placeholder={t("identity_description_placeholder")}
-                    value={identityForm.description}
-                    onChange={e => setIdentityForm({ ...identityForm, description: e.target.value })}
-                    className="bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] rounded-[var(--radius-md)] p-3 text-[var(--text-primary)] text-[0.95rem] min-h-[100px] resize-y focus:outline-none focus:border-[var(--text-secondary)] focus:bg-[#1a1a1a]"
-                  />
-                </div>
-                <button
-                  onClick={createIdentity}
-                  className={styles.saveButton}
-                  disabled={creatingIdentity}
-                >
-                  {creatingIdentity ? t("auth_creating") : t("Create Identity")}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ChatDialogs
+        settingsOpen={settingsOpen}
+        deleteConfirmId={deleteConfirmId}
+        showIdentityModal={showIdentityModal}
+        settingsModalRef={settingsModalRef}
+        deleteModalRef={deleteModalRef}
+        identityModalRef={identityModalRef}
+        activeTab={activeTab}
+        profileData={profileData}
+        subscriptionData={subscriptionData}
+        loadingSettings={loadingSettings}
+        identityForm={identityForm}
+        creatingIdentity={creatingIdentity}
+        onCloseSettings={() => setSettingsOpen(false)}
+        onSetActiveTab={setActiveTab}
+        onProfileChange={(field, value) => setProfileData((prev) => ({ ...prev, [field]: value }))}
+        onSaveProfile={() => void saveProfile()}
+        onLogout={() => void handleLogout()}
+        onUpgrade={() => router.push("/pricing")}
+        onCloseDelete={() => setDeleteConfirmId(null)}
+        onConfirmDelete={() => void confirmDeleteChat()}
+        onCloseIdentityModal={() => setShowIdentityModal(false)}
+        onIdentityFormChange={(field, value) =>
+          setIdentityForm((prev) => ({ ...prev, [field]: value }))
+        }
+        onCreateIdentity={() => void createIdentity()}
+        styles={styles}
+        t={t}
+      />
     </div>
   );
 }

@@ -37,10 +37,10 @@ function LoginForm() {
   return (
     <div className="flex flex-col w-full">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-white/70 mb-2">
+        <h1 className="text-3xl font-bold text-white mb-2">
           {t("Welcome to Seya")}
         </h1>
-        <p className="text-slate-400">
+        <p className="text-text-secondary">
           {t("Login to continue to your AI workspace")}
         </p>
       </div>
@@ -48,38 +48,40 @@ function LoginForm() {
       <div className="relative group rounded-2xl p-[1px] bg-gradient-to-b from-white/10 to-transparent">
         <form
           onSubmit={onSubmit}
-          className="relative flex flex-col gap-5 bg-card-dark/50 backdrop-blur-xl border border-white/5 rounded-2xl p-8 shadow-2xl"
+          className="relative flex flex-col gap-5 bg-card-dark/50 backdrop-blur-xl border border-white/5 rounded-2xl p-6 md:p-8 shadow-lg"
         >
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-300 ml-1">
+              <label htmlFor="login-email" className="text-sm font-medium text-text-secondary ms-1 block">
                 {t("Email")}
               </label>
               <input
+                id="login-email"
                 type="email"
                 placeholder="name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-colors font-medium"
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between ml-1">
-                <label className="text-sm font-medium text-slate-300">
+              <div className="flex items-center justify-between ms-1">
+                <label htmlFor="login-password" className="text-sm font-medium text-text-secondary">
                   {t("Password")}
                 </label>
-                <Link href="/auth/forgot-password" className="text-xs text-blue-400 hover:text-blue-300 transition-colors">
+                <Link href="/auth/forgot-password" className="text-xs text-text-secondary hover:text-white transition-colors">
                   {t("Forgot password?")}
                 </Link>
               </div>
               <input
+                id="login-password"
                 type="password"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-medium"
+                className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white placeholder:text-text-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary/50 transition-colors font-medium"
                 required
               />
             </div>
@@ -93,7 +95,7 @@ function LoginForm() {
 
           <button
             disabled={loading}
-            className="group flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-blue-600 hover:bg-blue-500 text-white font-bold transition-all shadow-[0_0_20px_-5px_rgba(37,99,235,0.5)] hover:shadow-[0_0_25px_-5px_rgba(37,99,235,0.6)] disabled:opacity-70 disabled:cursor-not-allowed mt-2"
+            className="group flex w-full items-center justify-center gap-2 rounded-xl h-12 bg-primary hover:bg-primary/90 text-white font-bold transition-colors disabled:opacity-70 disabled:cursor-not-allowed mt-2"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -105,20 +107,9 @@ function LoginForm() {
             )}
           </button>
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-white/10"></span>
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-[#0A0A0A] px-2 text-slate-500">
-                {t("Or continue with")}
-              </span>
-            </div>
-          </div>
-
-          <div className="text-center text-sm text-slate-400">
+          <div className="text-center text-sm text-text-secondary">
             {t("Don't have an account?")}{" "}
-            <Link href="/auth/register" className="text-blue-400 hover:text-blue-300 font-medium hover:underline decoration-blue-400/30 underline-offset-4 transition-all">
+            <Link href="/auth/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
               {t("Sign Up")}
             </Link>
           </div>
@@ -131,7 +122,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <AuthLayout>
-      <Suspense fallback={<div className="text-off-white text-center p-10">Loading...</div>}>
+      <Suspense fallback={<div className="text-text-secondary text-center p-10">Loading...</div>}>
         <LoginForm />
       </Suspense>
     </AuthLayout>

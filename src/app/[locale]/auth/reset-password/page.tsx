@@ -53,7 +53,7 @@ function ResetPasswordForm() {
                 setStatus("error");
                 setMessage(data.error || "Something went wrong");
             }
-        } catch (error) {
+        } catch {
             setStatus("error");
             setMessage("Failed to reset password");
         } finally {
@@ -76,27 +76,31 @@ function ResetPasswordForm() {
             <h1 className="text-off-white text-2xl font-bold mb-4">Set New Password</h1>
 
             <form onSubmit={onSubmit} className="flex flex-col gap-4 bg-card-dark border border-border-dark rounded-xl p-6">
+                <label htmlFor="reset-password" className="sr-only">New Password</label>
                 <input
+                    id="reset-password"
                     type="password"
                     placeholder="New Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
+                    className="rounded-lg border border-border-dark bg-surface px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                     required
                 />
+                <label htmlFor="reset-confirm-password" className="sr-only">Confirm New Password</label>
                 <input
+                    id="reset-confirm-password"
                     type="password"
                     placeholder="Confirm New Password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="rounded-lg border border-border-dark bg-[#1E1E24] px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:border-primary"
+                    className="rounded-lg border border-border-dark bg-surface px-4 py-3 text-off-white placeholder:text-text-muted-dark focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
                     required
                 />
 
                 {status === "error" && <div className="text-red-400 text-sm">{message}</div>}
                 {status === "success" && <div className="text-green-400 text-sm">{message}</div>}
 
-                <button disabled={loading} className="flex w-full items-center justify-center rounded-lg h-11 px-4 bg-[#007BFF] text-white font-bold hover:bg-blue-600 disabled:opacity-60">
+                <button disabled={loading} className="flex w-full items-center justify-center rounded-lg h-11 px-4 bg-primary text-white font-bold hover:bg-primary/90 transition-colors disabled:opacity-60">
                     {loading ? "Resetting..." : "Reset Password"}
                 </button>
             </form>
@@ -108,8 +112,8 @@ export default function ResetPasswordPage() {
     return (
         <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden">
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/2 w-[800px] h-[800px] bg-[#007BFF]/20 blur-3xl rounded-full"></div>
-                <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/2 w-[800px] h-[800px] bg-[#8A2BE2]/20 blur-3xl rounded-full"></div>
+                <div className="absolute top-0 left-0 -translate-x-1/4 -translate-y-1/2 w-[min(800px,100vw)] h-[min(800px,100vw)] bg-primary/[0.10] blur-3xl rounded-full"></div>
+                <div className="absolute bottom-0 right-0 translate-x-1/4 translate-y-1/2 w-[min(800px,100vw)] h-[min(800px,100vw)] bg-secondary/[0.08] blur-3xl rounded-full"></div>
             </div>
             <Header />
             <div className="layout-container flex grow flex-col">

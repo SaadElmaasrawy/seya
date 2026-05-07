@@ -6,7 +6,6 @@ interface UseScrollAnimationOptions {
     threshold?: number;
     rootMargin?: string;
     triggerOnce?: boolean;
-    delay?: number;
 }
 
 export function useScrollAnimation(options: UseScrollAnimationOptions = {}) {
@@ -14,7 +13,6 @@ export function useScrollAnimation(options: UseScrollAnimationOptions = {}) {
         threshold = 0.1,
         rootMargin = "0px 0px -100px 0px",
         triggerOnce = true,
-        delay = 0,
     } = options;
 
     const elementRef = useRef<HTMLDivElement>(null);
@@ -24,26 +22,15 @@ export function useScrollAnimation(options: UseScrollAnimationOptions = {}) {
         const element = elementRef.current;
         if (!element) return;
 
-        // Set initial styles to ensure animation works
-        element.style.opacity = "0";
-        element.style.transform = "translateY(30px)";
-        element.style.transition = `opacity 0.6s ease-out ${delay}ms, transform 0.6s ease-out ${delay}ms`;
-
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
                     setIsVisible(true);
-                    // Apply visible styles
-                    element.style.opacity = "1";
-                    element.style.transform = "translateY(0)";
-
                     if (triggerOnce) {
                         observer.unobserve(element);
                     }
                 } else if (!triggerOnce) {
                     setIsVisible(false);
-                    element.style.opacity = "0";
-                    element.style.transform = "translateY(30px)";
                 }
             },
             {
@@ -57,7 +44,7 @@ export function useScrollAnimation(options: UseScrollAnimationOptions = {}) {
         return () => {
             observer.disconnect();
         };
-    }, [threshold, rootMargin, triggerOnce, delay]);
+    }, [threshold, rootMargin, triggerOnce]);
 
     return { ref: elementRef, isVisible };
 }

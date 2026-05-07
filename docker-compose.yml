@@ -1,4 +1,13 @@
 services:
+  mongo:
+    image: mongo:7
+    container_name: seya-mongo
+    restart: always
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - seya-network
+
   app:
     image: seya-app
     container_name: seya-app
@@ -14,8 +23,13 @@ services:
       - MONGODB_URI=${MONGODB_URI:-mongodb://mongo:27017/seya}
       - JWT_SECRET=${JWT_SECRET}
       - NODE_ENV=production
+    depends_on:
+      - mongo
     networks:
       - seya-network
+
+volumes:
+  mongo_data:
 
 networks:
   seya-network:
